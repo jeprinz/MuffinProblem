@@ -1,6 +1,8 @@
 import math
 from fractions import Fraction
 
+#Well everything but intersections works properly
+
 #a Set is an interface that requires "hasPoint" and "hasOpen" method
 
 class Open:
