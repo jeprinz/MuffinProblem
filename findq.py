@@ -76,7 +76,7 @@ def findQ(m,s, spew=True):
 		print("C1: " + str(C1))
 		print("D1: " + str(D1))
 	MINONE = findMIN(A1,B1,C1,D1)
-	print("MINONE: " + str(MINONE))
+	if spew: print("MINONE: " + str(MINONE))
 
 	#calc MINTWO
 	A2,B2,C2,D2 = findABCD2(dat)
