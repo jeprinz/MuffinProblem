@@ -3,32 +3,21 @@ from sympy import *
 from sympy.abc import x
 from itertools import chain, combinations
 
-#from stackoverflow
-def powerset(iterable):
-    """
-    powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)
-    """
-    xs = list(iterable)
-    # note we return an iterator rather than a list
-    return chain.from_iterable(combinations(xs,n) for n in range(len(xs)+1))
-
-def possibPoly(numbers, total):
-	polies = [Poly(1+x**n) for n in numbers]
-	return prod(polies)**total
-
-def possibilities(numbers, addTo):
-	valid = []
-	for subset in powerset(numbers):
-		if len(subset) == 0:
-			continue
-		total = math.floor(addTo / min(subset))
-		poly = possibPoly(subset, total)
-		coeffs = poly.all_coeffs()
-		if len(coeffs) >= addTo and poly.all_coeffs()[addTo] != 0:
-			valid.append(subset)
-	return valid
-		
-
-	
-def poss2(numbers, addTo):
-	
+def waysToAddTo(numbers, addTo):
+	"""Input is numbers = list of numbers, addTo is number
+	output is list of lists of numbers
+	Each list in output sums to addTo"""
+	def waysToAddToImpl(numbers, addTo, numsSoFar):
+		for n in numbers:
+			nextList = numsSoFar + [n]
+			sumn = sum(nextList)
+			if sumn == addTo:
+				yield nextList
+			elif sumn < addTo:
+				lowerNumbers = [num for num in numbers if num <= n]
+				yield from waysToAddToImpl(lowerNumbers, addTo, nextList)
+			else:#sumn > addTo:
+				yield from []#there has to be a better way to do this
+				
+			
+	return waysToAddToImpl(numbers, addTo, [])
