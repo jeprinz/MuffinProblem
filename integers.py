@@ -1,5 +1,6 @@
 import math
 import functools
+import constraint
 
 from sympy import *
 from sympy.abc import x
@@ -62,9 +63,48 @@ def makeMatrix(m,s):
 
 	print("denominator: " + str(d))
 	print("piece sizes: " + str(pieces))
-	return M
-		
+	return Matrix(M)
+
+def solveAugmented(aug):
+	mat = aug.copy()
+	b = aug.copy()
+	mat.col_del(-1)
+	for i in range(mat.cols):
+		b.col_del(0)
+	print(mat)
+	print(b)
+	return natMatSolve(mat, b)
+
+def natMatSolve(mat, b):
+	cols = mat.cols
+	varlist = [symbols('x' + str(i), positive=True) - 1 for i in range(cols)] #we can only make positive, but want nonegative, so we subtract 1
+	x = Matrix(varlist)
+	result = solve(Eq(mat*x,b), *varlist, particular=True)
+	return result
 	
+
+
+def posIntSolve(numbers, addTo):
+	"""Find set of vectors of nonnegative integers that can be dot producted with numbers list to get addTo"""
+	def posIntSolveImpl(numbers, addTo, numsSoFar):
+		#numbers is [(number, info)] where info is anything you want
+		for value in numbers:#try adding each number
+			(n, info) = value
+			nextList = numsSoFar + [value]
+			sumn = sum([n for (n,info) in nextList])
+			if sumn == addTo:
+				yield nextList
+			elif sumn < addTo:
+				lowerNumbers = [(num, i) for (num, i) in numbers if num <= n]#wlog, pieces decrease in size from first to last
+				yield from posIntSolveImpl(lowerNumbers, addTo, nextList)
+			else:#sumn > addTo:
+				yield from []#there has to be a better way to do this
+	values = [(numbers[i], i) for i in range(len(numbers)) if numbers[i] != 0]
+	results = posIntSolveImpl(values, addTo, [])
+	indices = [[info for (n, info) in possibility] for possibility in results] #this is a list of lists of indices of numbers used
+	return [[possibility.count(n) for n in range(len(numbers))] for possibility in indices]
+
+		
 
 def lcm(args):
 	def lcm2(a, b):
