@@ -38,6 +38,9 @@ def solve(m,s):
 	pieces = [n for n in range(lowest, highest) if intervals.contains(S(n)/d)] #get all pieces
 	muffins = list(waysToAddTo(pieces, d)) #all possible muffins
 	students = list(waysToAddTo(pieces, m*d//s)) #all possible students
+
+	print("found muffins and students")
+
 	# now create matrix
 	M = [] #each sublist is a row, each row is a piece size (except last two, to come later)
 	for p in pieces:#create row for each peice
@@ -61,31 +64,30 @@ def solve(m,s):
 	#remember, left half of matrix is students, right half is muffins
 	M.append([1] * len(students) + [0] * len(muffins) + [s])#muffin total adds to m
 	M.append([0] * len(students) + [1] * len(muffins) + [m])#student total adds to s
-
-	print("matrix before rref")
-	print(M)
-
-	print("num muffs: " + str(len(muffins)))
-	print("num studs: " + str(len(students)))
+	
+	print("found matrix")
 
 	augmented = Matrix(M).rref()[0]
-	print("Matrix:")
-	print(augmented)
+
+	print("rref done")
 
 	(mat, b) = deAugment(augmented)
 
-	res = constraintSolveMat(m,s,mat,b)
-	res = [res['x'+str(i)] for i in range(len(res))]
-	print("res:" + str(res))
+	solutions = constraintSolveMat(m,s,mat,b)
+	print("The denominator is: " + str(d))
+	for res in solutions:
+		print("A solution:")
+		res = [res['x'+str(i)] for i in range(len(res))]
 
-	print("Muffins:")
-	index = 0
-	for student in students:
-		print(str(res[index]) + " student gets" + str(student))
-		index += 1
-	for muffin in muffins:
-		print(str(res[index]) + " muffin split into " + str(muffin))
-		index += 1
+		index = 0
+		for student in students:
+			if res[index] != 0:
+				print(str(res[index]) + " student gets" + str(student))
+			index += 1
+		for muffin in muffins:
+			if res[index] != 0:
+				print(str(res[index]) + " muffin split into " + str(muffin))
+			index += 1
 		
 
 
@@ -95,8 +97,6 @@ def deAugment(aug):
 	mat.col_del(-1)
 	for i in range(mat.cols):
 		b.col_del(0)
-	print(mat)
-	print(b)
 	return (mat,b)
 
 def constraintSolveMat(m, s, mat, b):
@@ -114,7 +114,7 @@ def constraintSolveMat(m, s, mat, b):
 				
 		problem.addConstraint(test, vars)
 	
-	return problem.getSolution()
+	return problem.getSolutionIter()
 
 def makeTest(row, bVal, nonzero):
 	def test(*args):
