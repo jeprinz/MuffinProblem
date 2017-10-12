@@ -26,8 +26,9 @@ def waysToAddTo(numbers, addTo):
 	return waysToAddToImpl(numbers, addTo, [])
 
 
-def makeMatrix(m,s):
+def solve(m,s):
 	"""Creates matrix system that represents any possible solution of f(m,s) given denom d and assumption Q"""
+	#calculate some initial things we need
 	intervals = symflip.doit(m,s)
 	points = list(intervals.boundary)
 	Q = points[0] #bound predicted by interval theorem
@@ -61,11 +62,34 @@ def makeMatrix(m,s):
 	M.append([1] * len(students) + [0] * len(muffins) + [s])#muffin total adds to m
 	M.append([0] * len(students) + [1] * len(muffins) + [m])#student total adds to s
 
-	print("denominator: " + str(d))
-	print("piece sizes: " + str(pieces))
-	return Matrix(M)
+	print("matrix before rref")
+	print(M)
 
-def solveAugmented(aug):
+	print("num muffs: " + str(len(muffins)))
+	print("num studs: " + str(len(students)))
+
+	augmented = Matrix(M).rref()[0]
+	print("Matrix:")
+	print(augmented)
+
+	(mat, b) = deAugment(augmented)
+
+	res = constraintSolveMat(m,s,mat,b)
+	res = [res['x'+str(i)] for i in range(len(res))]
+	print("res:" + str(res))
+
+	print("Muffins:")
+	index = 0
+	for student in students:
+		print(str(res[index]) + " student gets" + str(student))
+		index += 1
+	for muffin in muffins:
+		print(str(res[index]) + " muffin split into " + str(muffin))
+		index += 1
+		
+
+
+def deAugment(aug):
 	mat = aug.copy()
 	b = aug.copy()
 	mat.col_del(-1)
@@ -73,14 +97,35 @@ def solveAugmented(aug):
 		b.col_del(0)
 	print(mat)
 	print(b)
-	return natMatSolve(mat, b)
+	return (mat,b)
 
-def natMatSolve(mat, b):
+def constraintSolveMat(m, s, mat, b):
 	cols = mat.cols
-	varlist = [symbols('x' + str(i), positive=True) - 1 for i in range(cols)] #we can only make positive, but want nonegative, so we subtract 1
-	x = Matrix(varlist)
-	result = solve(Eq(mat*x,b), *varlist, particular=True)
-	return result
+	varlist = ['x' + str(i) for i in range(cols)]
+
+	problem = constraint.Problem()
+	for var in varlist:
+			problem.addVariable(var, list(range(m + 1)))#for now, can be better TODO
+	for (row, bVal) in zip(mat.tolist(), list(b)):
+		nonzero = [i for i in range(len(row)) if row[i] != 0] #indices where the row is not zero
+		vars = [varlist[i] for i in nonzero]
+
+		test = makeTest(row, bVal, nonzero)
+				
+		problem.addConstraint(test, vars)
+	
+	return problem.getSolution()
+
+def makeTest(row, bVal, nonzero):
+	def test(*args):
+		total = 0
+		var = 0
+		for i in nonzero:
+			total += args[var] * row[i]
+			var += 1
+		return total == bVal
+	return test
+	
 	
 
 
