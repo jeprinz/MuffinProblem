@@ -43,6 +43,7 @@ def doit(m,s):
 	Q = findq.findQ(m,s, spew=False)
 	(sV, sVm1) = interval.getShares(m,s,V)
 	intervals = getIntervals(m,s,Q,V)
+	#print (sV, sVm1, V)
 	return intervals
 	#if len(intervals.boundary) == 4: #two interval case
 	#	print("Muffins in ranges " + str(intervals) + " with quantities " + str(sV * V) + ", " +str(sVm1 * (V-1)))

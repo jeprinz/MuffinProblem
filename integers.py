@@ -25,21 +25,41 @@ def waysToAddTo(numbers, addTo):
 				
 	return waysToAddToImpl(numbers, addTo, [])
 
+def getPieces(d, intervals):
+	points = list(intervals.boundary)
+	newInterval = Union(*[Interval(x,x) for x in points])
+	if len(points) == 6:
+		newInterval = Union(newInterval, Interval(points[2], points[3]))
+	lowest, highest = int(points[0] * d), int(points[-1]*d + 1) #smallest and biggest pieces, working in units of 1/d
+	return [n for n in range(lowest, highest) if newInterval.contains(S(n)/d)] #get all pieces
+		
 
-def solve(m,s):
+
+def solve(m,s, d=None, intervals=None, pieces=None):
 	"""Creates matrix system that represents any possible solution of f(m,s) given denom d and assumption Q"""
 	#calculate some initial things we need
-	intervals = symflip.doit(m,s)
+	if intervals == None:
+		intervals = symflip.doit(m,s)
 	points = list(intervals.boundary)
 	Q = points[0] #bound predicted by interval theorem
-	d = lcm([fraction(f)[1] for f in points]) #denominator that we are going to use is lcm of denominators on ends of intervals
+	if d == None:
+		d = lcm([fraction(f)[1] for f in points]) #denominator that we are going to use is lcm of denominators on ends of intervals
 
 	lowest, highest = int(points[0] * d), int(points[-1]*d + 1) #smallest and biggest pieces, working in units of 1/d
-	pieces = [n for n in range(lowest, highest) if intervals.contains(S(n)/d)] #get all pieces
+	#lowest, highest, intervals = 1, d, Interval(0,1)
+	if pieces == None:
+		pieces = [n for n in range(lowest, highest) if intervals.contains(S(n)/d)] #get all pieces
+	#pieces = getPieces(d, intervals)
+	print("pieces: " + str(pieces))
 	muffins = list(waysToAddTo(pieces, d)) #all possible muffins
 	students = list(waysToAddTo(pieces, m*d//s)) #all possible students
 
+	print("muffins, students:")
+	print(muffins)
+	print(students)
+
 	print("found muffins and students")
+	print("denominator:" + str(d))
 
 	# now create matrix
 	M = [] #each sublist is a row, each row is a piece size (except last two, to come later)
@@ -67,7 +87,10 @@ def solve(m,s):
 	
 	print("found matrix")
 
+	#return Matrix(M)
+
 	augmented = Matrix(M).rref()[0]
+
 
 	print("rref done")
 
@@ -82,11 +105,11 @@ def solve(m,s):
 		index = 0
 		for student in students:
 			if res[index] != 0:
-				print(str(res[index]) + " student gets" + str(student))
+				print(str(res[index]) + " students gets" + str(student) + '\\\\')
 			index += 1
 		for muffin in muffins:
 			if res[index] != 0:
-				print(str(res[index]) + " muffin split into " + str(muffin))
+				print(str(res[index]) + " muffins split into " + str(muffin) + '\\\\')
 			index += 1
 		
 
