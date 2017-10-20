@@ -1,6 +1,7 @@
 import math
 import functools
 import constraint
+import intsystem
 
 from sympy import *
 from sympy.abc import x
@@ -50,16 +51,16 @@ def solve(m,s, d=None, intervals=None, pieces=None):
 	if pieces == None:
 		pieces = [n for n in range(lowest, highest) if intervals.contains(S(n)/d)] #get all pieces
 	#pieces = getPieces(d, intervals)
-	print("pieces: " + str(pieces))
+	#print("pieces: " + str(pieces))
 	muffins = list(waysToAddTo(pieces, d)) #all possible muffins
 	students = list(waysToAddTo(pieces, m*d//s)) #all possible students
 
-	print("muffins, students:")
-	print(muffins)
-	print(students)
+	#print("muffins, students:")
+	#print(muffins)
+	#print(students)
 
 	#print("found muffins and students")
-	print("denominator:" + str(d))
+	#print("denominator:" + str(d))
 
 	# now create matrix
 	M = [] #each sublist is a row, each row is a piece size (except last two, to come later)
@@ -87,7 +88,7 @@ def solve(m,s, d=None, intervals=None, pieces=None):
 	
 	#print("found matrix")
 
-	return Matrix(M)
+	#return Matrix(M)
 
 	augmented = Matrix(M).rref()[0]
 
@@ -96,11 +97,17 @@ def solve(m,s, d=None, intervals=None, pieces=None):
 
 	(mat, b) = deAugment(augmented)
 
-	solutions = constraintSolveMat(m,s,mat,b)
+	#solutions = constraintSolveMat(m,s,mat,b)
+	solution = intsystem.solve(augmented, 0, m)
+	if solution == None:
+		return []
+	solutions = [solution]
+		
+
 	#print("The denominator is: " + str(d))
 	for res in solutions:
 		#print("A solution:")
-		res = [res['x'+str(i)] for i in range(len(res))]#constraints library returns a dictionary thing, this gets number from it
+		#res = [res['x'+str(i)] for i in range(len(res))]#constraints library returns a dictionary thing, this gets number from it
 
 		muffinList, studentList = [],[]
 
@@ -115,7 +122,7 @@ def solve(m,s, d=None, intervals=None, pieces=None):
 				#print(str(res[index]) + " muffins split into " + str(muffin) + '\\\\')
 				muffinList.append((res[index], muffin))
 			index += 1
-		#yield (muffinList, studentList)
+		yield (muffinList, studentList)
 		
 
 
