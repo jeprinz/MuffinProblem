@@ -51,7 +51,7 @@ def findQ(m,s, spew=True):
 	m = Fraction(m)
 	s = Fraction(s)
 
-	if (m<s):
+	if (m<s and spew):
 		print("The interval therum only works when m>s")
 		return 1
 
@@ -64,7 +64,7 @@ def findQ(m,s, spew=True):
 	if spew: print("sV: " + str(sV))
 	if spew: print("sVm1: " + str(sVm1))
 
-	if (sVm1 == 0):
+	if (sVm1 == 0 and spew):
 		print("sVm1 is zero, so this in not a case handled by the interval theorum.")
 		return 1
 
@@ -101,7 +101,7 @@ def findQ(m,s, spew=True):
 		Q4 = (m/s - Fraction(1,2)) / (V - 1)
 	
 	passes = [x for x in [Q1,Q2,Q3,Q4] if INIT(dat, x)]
-	if (len(passes) == 0):
+	if (len(passes) == 0 and spew):
 		print("none of Q1,Q2,Q3,Q4 passed INIT test")
 		return 1
 	else:

@@ -4,7 +4,7 @@ import interval
 
 
 def mapunion(s,f):
-	print(s)
+	#print(s)
 	ends = list(s.boundary)
 	ends.reverse
 	intervals = []

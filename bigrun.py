@@ -38,3 +38,16 @@ def intervalToPieces(m,s,intervals):#returns (pieces size list, denominator)
 def procedures(m,s):
 	pieces, d = getPiecesDenom(m,s)
 	return integers.solve(m,s,d=d, pieces=pieces, intervals=Interval(0,1))
+
+def getRow(m,s):
+	pieces, d = getPiecesDenom(m,s)
+	#numProc = len(list(procedures(m,s)))
+	hasElem = any(True for _ in procedures(m,s))
+	return (m, s, d, pieces, hasElem)
+
+def bigrun(maxM, maxS):
+	for m in range(1, maxM+1):
+		for s in range(7, maxS+1):
+			if m > s+1:
+				yield getRow(m,s)
+

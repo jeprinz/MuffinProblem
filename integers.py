@@ -58,7 +58,7 @@ def solve(m,s, d=None, intervals=None, pieces=None):
 	print(muffins)
 	print(students)
 
-	print("found muffins and students")
+	#print("found muffins and students")
 	print("denominator:" + str(d))
 
 	# now create matrix
@@ -85,32 +85,37 @@ def solve(m,s, d=None, intervals=None, pieces=None):
 	M.append([1] * len(students) + [0] * len(muffins) + [s])#muffin total adds to m
 	M.append([0] * len(students) + [1] * len(muffins) + [m])#student total adds to s
 	
-	print("found matrix")
+	#print("found matrix")
 
-	#return Matrix(M)
+	return Matrix(M)
 
 	augmented = Matrix(M).rref()[0]
 
 
-	print("rref done")
+	#print("rref done")
 
 	(mat, b) = deAugment(augmented)
 
 	solutions = constraintSolveMat(m,s,mat,b)
-	print("The denominator is: " + str(d))
+	#print("The denominator is: " + str(d))
 	for res in solutions:
-		print("A solution:")
-		res = [res['x'+str(i)] for i in range(len(res))]
+		#print("A solution:")
+		res = [res['x'+str(i)] for i in range(len(res))]#constraints library returns a dictionary thing, this gets number from it
+
+		muffinList, studentList = [],[]
 
 		index = 0
 		for student in students:
 			if res[index] != 0:
-				print(str(res[index]) + " students gets" + str(student) + '\\\\')
+				#print(str(res[index]) + " students gets" + str(student) + '\\\\')
+				studentList.append((res[index], student))
 			index += 1
 		for muffin in muffins:
 			if res[index] != 0:
-				print(str(res[index]) + " muffins split into " + str(muffin) + '\\\\')
+				#print(str(res[index]) + " muffins split into " + str(muffin) + '\\\\')
+				muffinList.append((res[index], muffin))
 			index += 1
+		#yield (muffinList, studentList)
 		
 
 
