@@ -36,7 +36,7 @@ def getPieces(d, intervals):
 		
 
 
-def solve(m,s, d=None, intervals=None, pieces=None):
+def solve(m,s, d=None, intervals=None, pieces=None, spew=False):
 	"""Creates matrix system that represents any possible solution of f(m,s) given denom d and assumption Q"""
 	#calculate some initial things we need
 	if intervals == None:
@@ -50,17 +50,17 @@ def solve(m,s, d=None, intervals=None, pieces=None):
 	#lowest, highest, intervals = 1, d, Interval(0,1)
 	if pieces == None:
 		pieces = [n for n in range(lowest, highest) if intervals.contains(S(n)/d)] #get all pieces
-	#pieces = getPieces(d, intervals)
-	#print("pieces: " + str(pieces))
+	if spew:
+		#pieces = getPieces(d, intervals) #this line would use only endpoints
+		print("pieces: " + str(pieces))
 	muffins = list(waysToAddTo(pieces, d)) #all possible muffins
 	students = list(waysToAddTo(pieces, m*d//s)) #all possible students
 
-	#print("muffins, students:")
-	#print(muffins)
-	#print(students)
-
-	#print("found muffins and students")
-	#print("denominator:" + str(d))
+	if spew:
+		print("muffins, students:")
+		print(muffins)
+		print(students)
+		print("denominator:" + str(d))
 
 	# now create matrix
 	M = [] #each sublist is a row, each row is a piece size (except last two, to come later)
