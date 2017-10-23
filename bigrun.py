@@ -51,3 +51,16 @@ def bigrun(maxM, maxS):
 			if m > s+1:
 				yield getRow(m,s)
 
+def resultsToStr(results):
+	lines = []
+	for result in results:
+		(m,s,d,pieces,hasElem) = result
+		pieceStr = ','.join([str(piece) for piece in pieces])
+		line = "%d, %d, %d, [%s], %s"%(m,s,d,pieceStr,str(hasElem))
+		lines.append(line)
+	return '\n'.join(lines)
+
+def resultsToFile(results, filename):
+	text_file = open(filename, "w")
+	text_file.write(resultsToStr(results))
+	text_file.close()

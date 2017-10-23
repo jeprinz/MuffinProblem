@@ -32,11 +32,11 @@ def getIntervals(m,s,Q,V):
 	m,s,Q = S(m),S(s),S(Q)
 	f = m/s - (V-1)*Q
 	g = m/s - V + 2 + Q*(V-2)
-	#print((Q,f,g,1-Q))
 	intervals = Union(Interval(Q,f), Interval(g,1-Q))
 	flipped = Union(Interval(Q, 1-g),Interval(1-f, 1-Q))
 	#return flippyDippy(intervals)
-	return Intersection(intervals, flipped)
+	res = Intersection(intervals, flipped)
+	return res
 
 def doit(m,s):
 	V = interval.findV(m,s)
