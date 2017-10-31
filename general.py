@@ -64,13 +64,13 @@ def howIntersect(int1, int2, Qs, swap=False):
 	else:
 		raise Exception("this should never happen")
 
-def union2(int1, int2, intersection):
-	#intersection from howIntersect
-	(case, swapped, Qmin) = intersection
-	A, B = int1
-	C, D = int2
+def union2(int1, int2, relation):#TODO: add relation as named argument so it calls howIntersect if not supplied, or make another function w/2 argunemts that does that
+	#relation from howIntersect
+	(case, swapped, Qmin) = relation
 	if swapped:
 		int1, int2 = int2, int1
+	A, B = int1
+	C, D = int2
 	intervals = None
 	if case == 1:
 		intervals = [int1, int2]
@@ -80,13 +80,13 @@ def union2(int1, int2, intersection):
 		intervals = [int1]
 	return (intervals, Qmin)
 
-def intersect2(int1, int2, intersection):
-	#intersection from howIntersect
-	(case, swapped, Qmin) = intersection
-	A, B = int1
-	C, D = int2
+def intersect2(int1, int2, relation):
+	#relation from howIntersect
+	(case, swapped, Qmin) = relation
 	if swapped:
 		int1, int2 = int2, int1
+	A, B = int1
+	C, D = int2
 	intervals = None
 	if case == 1:
 		intervals = []
@@ -102,21 +102,32 @@ def union(ints, Qs):
 	Qmin = 0
 	while anyIntersections == True:
 		anyIntersections = False
-		Qmin = 0
-		intervals = []
-		print(ints)
 		for (int1, int2) in itertools.combinations(ints, 2):
-			intersection = howIntersect(int1, int2, Qs)
-			(case, swapped, newQmin) = intersection
-			print('case is' + str(case))
-			if newQmin > Qmin: Qmin = newQmin#set Qmin to highest value
-			if case != 1:# if they intersect
-				anyIntersections = True
-			(interval, Qmin) = union2(int1, int2, intersection)
-			intervals += interval
-		ints = intervals
+			if int1 in ints and int2 in ints:
+				relation = howIntersect(int1, int2, Qs)
+				(case, swapped, newQmin) = relation
+				if newQmin > Qmin: Qmin = newQmin#set Qmin to highest value
+				if case != 1:# if they intersect
+					anyIntersections = True
+				(interval, Qmin) = union2(int1, int2, relation)
+				ints.remove(int1)
+				ints.remove(int2)
+				ints += interval
 	return (ints, Qmin)
 #can do mergesort for union
+
+def intersection(seta, setb, Qs):
+	ints = []
+	Qmin = 0
+	combinations =  [(a, b) for a in seta for b in setb]
+	for (int1, int2) in combinations:
+		relation = howIntersect(int1, int2, Qs)
+		(interval, newQmin) = intersect2(int1, int2, relation)
+		if newQmin > Qmin: Qmin = newQmin#set Qmin to highest value
+		ints.append(interval)
+	(result, newQmin) = union(ints, Qs)
+	return (result, max(Qmin, newQmin))
+
 
 def unionMergeFancy(ints, Qs):
 	"""returns (intervals, Qmin)"""
@@ -131,13 +142,16 @@ def unionMergeFancy(ints, Qs):
 def test():
 	int1= Interval(Value(1,-Fraction(1,4)), Value(2,Fraction(1,5)))
 	int2= Interval(Value(Fraction(1,3),-Fraction(3,4)), Value(1,Fraction(1,5)))
-	int3= Interval(Value(1,-Fraction(1,5)), Value(-1,Fraction(1,5)))
+	int3= Interval(Value(1,-Fraction(1,5)), Value(-1,Fraction(1,1)))
 	print(int1)
 	print(int2)
 	print(int3)
-	intersection = howIntersect(int1, int2, Fraction(1,2))
-	print("intersection: " + str(intersection))
-	print("union2: " + str(union2(int1, int2, intersection)))
+	relation = howIntersect(int1, int2, Fraction(1,2))
+	print("relation: " + str(relation))
+	print("union1 2: " + str(union2(int1, int2, relation)))
+	relation = howIntersect(int1, int3, Fraction(1,2))
+	print("union1 3: " + str(union2(int1, int3, relation)))
+	print("union all: " + str(union([int1, int2, int3], Fraction(7,15))))
+	print("intersect all: " + str(intersection([int1], [int2], Fraction(1,2))))
+	print(((int1[0].eval(.5), int1[1].eval(.5)),(int2[0].eval(.5), int2[1].eval(.5))))
 
-	print("union2: " + str(union2(int1, int3, intersection)))
-	print(union([int1, int2, int3], Fraction(7,15)))
