@@ -3,6 +3,7 @@ import integers
 import symflip
 import math
 from symflip import lcm
+import findq
 
 def floorciel(m,s):
 	m = S(m)
@@ -47,9 +48,38 @@ def getRow(m,s):
 
 def bigrun(maxM, maxS):
 	for m in range(1, maxM+1):
-		for s in range(7, maxS+1):
+		for s in range(1, maxS+1):#7, maxS+1):
 			if m > s+1:
-				yield getRow(m,s)
+				if math.gcd(m,s) == 1:
+					yield getRow(m,s)
+
+def biggrid(maxM, maxS):
+	lines = []
+	for m in range(1, maxM+1):
+		values = []
+		for s in range(1, maxS+1):
+			if m > s:
+				#(m,s,d,pieces,hasElem) = getRow(m,s)
+				#pieces, d = getPiecesDenom(m,s)
+				#bound = pieces[0]/d
+				#if hasElem:
+				inter=1
+				try:
+					inter = findq.findQ(m,s,spew=False)
+				except:
+					pass
+				fc = floorciel(m,s)
+				bound = min(inter,fc)
+				if bound == S(1)/3:
+					values.append(str(bound))
+				else: values.append(str(0))
+			else:
+				values.append(str(0))
+		lines.append(";".join(values))
+	text = "\n".join(lines)
+	text_file = open("girdy3.csv", "w")
+	text_file.write(text)
+	text_file.close()
 
 def resultsToStr(results):
 	lines = []

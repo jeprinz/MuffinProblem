@@ -103,12 +103,17 @@ def findQ(m,s, spew=True):
 	Q4 = (m/s - Fraction(1,2)) / (V - 1)
 	if not PREM4(dat, Q4):
 		Q4 = 1
-	Q5 = (V - 2) / (2*V - 3)
+	#Q5 = (V - 2) / (2*V - 3)
+	Q5 = (m/s - Fraction(1)/2) / (V - 1)
 	if not PREM5(dat, Q5):
 		Q5 = 1
-	Q6 = (V - 2) / (2*V - 3)
+	#Q6 = (V - 2) / (2*V - 3)
+	Q6 = (V - Fraction(3)/2 - m/s) / (V - 2)
 	if not PREM6(dat, Q6):
 		Q6 = 1
+	
+	if spew:
+		print("Qs: " + str([Q1,Q2,Q3,Q4,Q5,Q6]))
 	
 	Q = min([Q1, Q2, Q3, Q4, Q5, Q6])
 	return max(Fraction(1)/3, m/(s*(V+1)), 1 - m/(s*(V-2)), Q)
@@ -152,13 +157,16 @@ def PREM4(dat, Q):
 def PREM5(dat, Q):
 	(m,s,V,sV, sVm1) = dat
 	cond1 = Q >= (m/s - Fraction(1)/2) / (V - 1)#erik style
-	cond2 = V*sV > (V - 1)*sVm1
-	return cond1 and cond2 # and PREM(dat, Q)
+	cond2 = Q < m/s*V
+	cond3 = V*sV > (V - 1)*sVm1
+	return cond1 and cond2 and cond3 # and PREM(da, Q)
 def PREM6(dat, Q):
 	(m,s,V,sV, sVm1) = dat
-	cond1 = Q >= 1 - (m/s - Fraction(1)/2) / (V - 2)
-	cond2 = V*sV < (V - 1)*sVm1
-	return cond1 and cond2 # and PREM(dat, Q)
+	#cond1 = Q >= 1 - (m/s - Fraction(1)/2) / (V - 2)
+	cond1 = Q >= (V - Fraction(3)/2 - m/s) / (V - 2)
+	cond2 = Q < (V - m/s - 1)/(V - 1)
+	cond3 = V*sV < (V - 1)*sVm1
+	return cond1 and cond2 and cond3 # and PREM(dat, Q)
 #def PREM5(dat, Q):
 #	(m,s,V,sV, sVm1) = dat
 #	A = (2*m - s) / (2*s*(V - 1))
