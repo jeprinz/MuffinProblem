@@ -1,6 +1,7 @@
 from fractions import Fraction
 import math
 import itertools
+import numbers
 
 #an interval is represented by (a,b) a tuple of Fractions
 
@@ -18,6 +19,17 @@ class Value(tuple):
 		return "%sQ + %s" % (str(self.a), str(self.b))
 	def eval(self, Q):
 		return self.a * Q + self.b
+	def __add__(self, other):
+		if isinstance(other, numbers.Number):
+			other = Value(0, Fraction(other))
+		(oa, ob) = other
+		return Value(self.a + oa, self.b + ob)
+	def __radd__(self, other):
+		return self+other
+	def __mul__(self, other):
+		return Value(self.a * other, self.b * other)
+	def __rmul__(self, other):
+		return self*other
 
 class Interval(tuple):
 	"""Represents an interval"""
@@ -31,6 +43,19 @@ class Interval(tuple):
 		return str(self)
 	def __str__(self):
 		return "(%s, %s)" % (str(self.a), str(self.b))
+	def __add__(self, other):
+		return Interval(self.a+other, self.b+other)
+	def __radd__(self, other):
+		return self+other
+	def __mul__(self, other):
+		a = self.a*other
+		b = self.b*other
+		if other < 0:
+			a, b = b, a
+		return Interval(a, b)
+	def __rmul__(self, other):
+		return self*other
+
 
 
 def minQ(valA, valB, Qs):
@@ -124,7 +149,7 @@ def intersection(seta, setb, Qs):
 		relation = howIntersect(int1, int2, Qs)
 		(interval, newQmin) = intersect2(int1, int2, relation)
 		if newQmin > Qmin: Qmin = newQmin#set Qmin to highest value
-		ints.append(interval)
+		ints += interval
 	(result, newQmin) = union(ints, Qs)
 	return (result, max(Qmin, newQmin))
 
@@ -138,20 +163,53 @@ def unionMergeFancy(ints, Qs):
 	(unLeft, Qminl) = union(left, Qs)
 	(unright, Qminr) = union(right, Qs)
 	
+def sum_to_n(n, size, limit=None):
+    """Produce all lists of `size` positive integers in decreasing order
+    that add up to `n`."""
+    if size == 1:
+        yield [n]
+        return
+    if limit is None:
+        limit = n
+    start = (n + size - 1) // size
+    stop = min(limit, n - size + 1) + 1
+    for i in range(start, stop):
+        for tail in sum_to_n(n - i, size - 1, i):
+            yield [i] + tail
+
+def whereAverage(ints, N, Qs):
+	leftVals = [inter[0] for inter in ints]
+	rightVals = [inter[1] for inter in ints]
+	results = []
+	for partition in sum_to_n(N, len(ints)):
+		left = sum(a*b for (a,b) in zip(partition, leftVals)) * Fraction(1,N)
+		right = sum(a*b for (a,b) in zip(partition, rightVals)) * Fraction(1,N)
+		results.append(Interval(left, right))
+	return union(results, Qs)
+
+def constrainToSumT(ints, num, T, Qs):
+	(R, Qmin1) = whereAverage(ints, num-1, Qs)
+	Rprime = [T + -1*interval*(num - 1) for interval in R]
+	(results, Qmin2) = intersection(Rprime, ints, Qs)
+	return (results, max(Qmin1, Qmin2))
+
 
 def test():
-	int1= Interval(Value(1,-Fraction(1,4)), Value(2,Fraction(1,5)))
+	one = Fraction(1)
+	int1= Interval(Value(2,-Fraction(1,4)), Value(2,Fraction(1,5)))
 	int2= Interval(Value(Fraction(1,3),-Fraction(3,4)), Value(1,Fraction(1,5)))
 	int3= Interval(Value(1,-Fraction(1,5)), Value(-1,Fraction(1,1)))
-	print(int1)
-	print(int2)
-	print(int3)
-	relation = howIntersect(int1, int2, Fraction(1,2))
-	print("relation: " + str(relation))
-	print("union1 2: " + str(union2(int1, int2, relation)))
-	relation = howIntersect(int1, int3, Fraction(1,2))
-	print("union1 3: " + str(union2(int1, int3, relation)))
-	print("union all: " + str(union([int1, int2, int3], Fraction(7,15))))
-	print("intersect all: " + str(intersection([int1], [int2], Fraction(1,2))))
-	print(((int1[0].eval(.5), int1[1].eval(.5)),(int2[0].eval(.5), int2[1].eval(.5))))
+	#print(int1)
+	#print(int2)
+	#print(int3)
+	#relation = howIntersect(int1, int2, Fraction(1,2))
+	#print("relation: " + str(relation))
+	#print("union1 2: " + str(union2(int1, int2, relation)))
+	#relation = howIntersect(int1, int3, Fraction(1,2))
+	#print("union1 3: " + str(union2(int1, int3, relation)))
+	#print("union all: " + str(union([int1, int2, int3], Fraction(7,15))))
+	#print("intersect all: " + str(intersection([int1], [int2], Fraction(1,2))))
+	(unionall, Qmin) = union([int1, int2, int3], Fraction(7,15))
+	simple = Interval(Value(one, -one/2), Value(one, one/2))
+	print("constrained: " + str(constrainToSumT([simple], 2, 3*one/2, Fraction(1,2))))
 
