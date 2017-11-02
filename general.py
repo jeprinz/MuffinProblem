@@ -2,6 +2,8 @@ from fractions import Fraction
 import math
 import itertools
 import numbers
+import interval
+import operator
 
 #an interval is represented by (a,b) a tuple of Fractions
 
@@ -73,7 +75,7 @@ def howIntersect(int1, int2, Qs, swap=False):
 	(a1, a2) = A
 	(c1, c2) = C
 	if not A == C:
-		if A.eval(Qs)  == C.eval(Qs) and c1 > a2:
+		if A.eval(Qs)  == C.eval(Qs) and c1 > a1:#was a2 instead of a1, i think that was a bug
 			return howIntersect(int2, int1, Qs, True)
 		elif not A.eval(Qs) <= C.eval(Qs):
 			return howIntersect(int2, int1, Qs, True)
@@ -163,21 +165,20 @@ def unionMergeFancy(ints, Qs):
 	(unLeft, Qminl) = union(left, Qs)
 	(unright, Qminr) = union(right, Qs)
 	
-def sum_to_n(n, size, limit=None):
-    """Produce all lists of `size` positive integers in decreasing order
-    that add up to `n`."""
-    if size == 1:
-        yield [n]
-        return
-    if limit is None:
-        limit = n
-    start = (n + size - 1) // size
-    stop = min(limit, n - size + 1) + 1
-    for i in range(start, stop):
-        for tail in sum_to_n(n - i, size - 1, i):
-            yield [i] + tail
+def sum_to_n(r, n):#sum_to_n(total, number of bins)
+	if type(r) == Fraction and r.denominator == 1:
+		r = int(r)
+	if type(n) == Fraction and n.denominator == 1:
+		n = int(n)
+	size = n + r - 1
+	for indices in itertools.combinations(range(size), n-1):
+		starts = [0] + [index+1 for index in indices]
+		stops = indices + (size,)
+		yield tuple(map(operator.sub, stops, starts))
 
 def whereAverage(ints, N, Qs):
+	if len(ints) == 0:
+		return (ints, 0) #Qmin is 0 because there is no minimum
 	leftVals = [inter[0] for inter in ints]
 	rightVals = [inter[1] for inter in ints]
 	results = []
@@ -193,6 +194,44 @@ def constrainToSumT(ints, num, T, Qs):
 	(results, Qmin2) = intersection(Rprime, ints, Qs)
 	return (results, max(Qmin1, Qmin2))
 
+def constrain(m,s, Qs):
+	m, s = Fraction(m), Fraction(s)
+	V = interval.findV(m,s)
+	sV, sVm1 = interval.getShares(m,s,V)
+
+	Q = Value(1,0)
+	M = [Interval(Q, 1 + -1*Q)]
+	A = [Interval(Q, 1 + -1*Q)]
+	B = [Interval(Q, 1 + -1*Q)]
+
+	Qmin = Qs
+
+	for i in range(3):
+		print("M, A, B:")
+		printIntervals(M, Qs)
+		printIntervals(A, Qs)
+		printIntervals(B, Qs)
+		if i == 2:
+			return A
+		print('constrains')
+		(M, Qminm) = constrainToSumT(M, 2, 1, Qs)
+		(A, Qmina) = constrainToSumT(A, V - 1, m/s, Qs)
+		(B, Qminb) = constrainToSumT(B, V, m/s, Qs)
+		print("M, A, B:")
+		printIntervals(M, Qs)
+		printIntervals(A, Qs)
+		printIntervals(B, Qs)
+		print('intersections')
+		Qmin = max(Qmin, Qmina, Qminb, Qminm)
+		(A, Qmina) = intersection(A, M, Qs)
+		(B, Qminb) = intersection(B, M, Qs)
+		(M, Qminm) = union(A + B, Qs)
+		Qmin = max(Qmin, Qmina, Qminb, Qminm)
+	return M, Qmin
+
+def printIntervals(ints, Qs):
+	numbs = [(vala.eval(Qs), valb.eval(Qs)) for (vala, valb) in ints]
+	print(numbs)
 
 def test():
 	one = Fraction(1)
