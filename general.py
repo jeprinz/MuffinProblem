@@ -204,9 +204,10 @@ def constrain(m,s, Qs):
 	A = [Interval(Q, 1 + -1*Q)]
 	B = [Interval(Q, 1 + -1*Q)]
 
-	Qmin = Qs
+	Qmin = 0#Qs
 
-	for i in range(3):
+	while True:
+		oldA, oldB, oldM = A, B, M
 		#print("M, A, B:")
 		#printIntervals(M, Qs)
 		#printIntervals(A, Qs)
@@ -229,7 +230,28 @@ def constrain(m,s, Qs):
 		(B, Qminb) = intersection(B, M, Qs)
 		(M, Qminm) = union(A + B, Qs)
 		Qmin = max(Qmin, Qmina, Qminb, Qminm)
+		if oldA == A and oldB == B and oldM == M:
+			break
 	return M, Qmin
+
+#this is algorithm in latex, but I realize this was uneccesary
+def leastMostCOmplicated(ints, index, T, V, Qs):#index is index of important interval in ints
+	I = ints[index]
+	ints = ints[:index] + ints[index+1:]#rest of intervals without I
+	Qmin = 0
+	canAdd = []#list of v's for which it works
+	for v in range(1, int(V+1)):
+		(R, Qmin1) = whereAverage(ints, V - v, Qs)
+		Rprime = (T + -1*(V - v)*R) * (1/v)
+		(intersect, Qmin2) = intersection(Rprime, [I], Qs) 
+		Qmin = max(Qmin1, Qmin2)
+		#left off here...
+
+def leastMost(ints, index, T, V, Qs):#index is index of important interval in ints
+	I = ints[index]
+	ints = ints[:index] + ints[index+1:]#rest of intervals without I
+	Qmin = 0
+
 
 def printIntervals(ints, Qs):
 	numbs = [(vala.eval(Qs), valb.eval(Qs)) for (vala, valb) in ints]
