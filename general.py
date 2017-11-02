@@ -102,7 +102,7 @@ def union2(int1, int2, relation):#TODO: add relation as named argument so it cal
 	if case == 1:
 		intervals = [int1, int2]
 	elif case == 2:
-		intervals = [(A, D)]
+		intervals = [Interval(A, D)]
 	elif case == 3:
 		intervals = [int1]
 	return (intervals, Qmin)
@@ -118,7 +118,7 @@ def intersect2(int1, int2, relation):
 	if case == 1:
 		intervals = []
 	elif case == 2:
-		intervals = [(C, B)]
+		intervals = [Interval(C, B)]
 	elif case == 3:
 		intervals = [int2]
 	return (intervals, Qmin)
@@ -207,21 +207,23 @@ def constrain(m,s, Qs):
 	Qmin = Qs
 
 	for i in range(3):
-		print("M, A, B:")
-		printIntervals(M, Qs)
-		printIntervals(A, Qs)
-		printIntervals(B, Qs)
-		if i == 2:
-			return A
-		print('constrains')
+		#print("M, A, B:")
+		#printIntervals(M, Qs)
+		#printIntervals(A, Qs)
+		#printIntervals(B, Qs)
+		#print('A types:')
+		#print([type(interval) for interval in A])
+		#print('constrains')
 		(M, Qminm) = constrainToSumT(M, 2, 1, Qs)
 		(A, Qmina) = constrainToSumT(A, V - 1, m/s, Qs)
 		(B, Qminb) = constrainToSumT(B, V, m/s, Qs)
-		print("M, A, B:")
-		printIntervals(M, Qs)
-		printIntervals(A, Qs)
-		printIntervals(B, Qs)
-		print('intersections')
+		#print("M, A, B:")
+		#printIntervals(M, Qs)
+		#printIntervals(A, Qs)
+		#printIntervals(B, Qs)
+		#print('A types:')
+		#print([type(interval) for interval in A])
+		#print('intersections')
 		Qmin = max(Qmin, Qmina, Qminb, Qminm)
 		(A, Qmina) = intersection(A, M, Qs)
 		(B, Qminb) = intersection(B, M, Qs)
