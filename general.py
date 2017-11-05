@@ -234,23 +234,34 @@ def constrain(m,s, Qs):
 			break
 	return M, Qmin
 
-#this is algorithm in latex, but I realize this was uneccesary
-def leastMostCOmplicated(ints, index, T, V, Qs):#index is index of important interval in ints
-	I = ints[index]
-	ints = ints[:index] + ints[index+1:]#rest of intervals without I
-	Qmin = 0
-	canAdd = []#list of v's for which it works
-	for v in range(1, int(V+1)):
-		(R, Qmin1) = whereAverage(ints, V - v, Qs)
-		Rprime = (T + -1*(V - v)*R) * (1/v)
-		(intersect, Qmin2) = intersection(Rprime, [I], Qs) 
-		Qmin = max(Qmin1, Qmin2)
-		#left off here...
+def contradictions(vShares, vm1Shares, T, V, Qs):#return (boolean is there contradiction, QMin)
+	ints = union(vShares + vm1Shares, Qs)[0]#don't care about QMin
 
-def leastMost(ints, index, T, V, Qs):#index is index of important interval in ints
-	I = ints[index]
-	ints = ints[:index] + ints[index+1:]#rest of intervals without I
-	Qmin = 0
+	#sort intervals
+	print(ints)
+	ints = sorted(ints, key=lambda i: i[0].eval(Qs))
+
+	L = ints[0][0].eval(Qs)#left side of 0th interval
+	R = ints[-1][1].eval(Qs)#right side of last interval
+
+
+	# we now need v and v-1 shares that don't intersect
+	overlap = len(vm1Shares) + len(vShares) - len(ints)
+	numBijection = (len(ints) - overlap) // 2
+
+	for i in range(numBijection):# for each pair of intervals
+		vInteral = vShares[i]
+		vm1Interval = vm1Shares[i]
+		a1, b1 = vInteral
+		a2, b2 = vm1Interval
+
+		
+	
+	
+	
+	
+			
+		
 
 
 def printIntervals(ints, Qs):

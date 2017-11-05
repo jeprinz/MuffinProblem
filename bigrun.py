@@ -15,15 +15,27 @@ def floorciel(m,s):
 def getPiecesDenom(m,s):#returns (piece size list, denominator)
 	fc = floorciel(m,s)
 	intv = 1
-	try:
-		intervals = symflip.doit(m,s)
-		if not intervals == EmptySet():
-			points = list(intervals.boundary)
-			intv = points[0]
-			if intv < fc:
-				return intervalToPieces(m,s,intervals)
-	except:
-		pass
+
+
+	intervals = symflip.doit(m,s)
+	if not intervals == EmptySet():
+		points = list(intervals.boundary)
+		intv = points[0]
+		if intv < fc:
+			return intervalToPieces(m,s,intervals)
+
+
+	#try:
+	#	intervals = symflip.doit(m,s)
+	#	if not intervals == EmptySet():
+	#		points = list(intervals.boundary)
+	#		intv = points[0]
+	#		if intv < fc:
+	#			return intervalToPieces(m,s,intervals)
+	#except Exception as e:
+	#	print('exception is:')
+	#	print(e)
+	#	pass
 	
 	#or, if floor cieling:
 	intervals = symflip.getIntervals(m,s,fc, ceiling(2*m/s))
@@ -94,3 +106,14 @@ def resultsToFile(results, filename):
 	text_file = open(filename, "w")
 	text_file.write(resultsToStr(results))
 	text_file.close()
+
+def stupidStr(results):
+	lines = []
+	for result in results:
+		(m,s,d,pieces,hasElem) = result
+		size = float(pieces[0] / d)
+		if not hasElem:
+			line = "%d, %d, %s"%(m,s,str(size))
+			lines.append(line)
+	return '\n'.join(lines)
+	
