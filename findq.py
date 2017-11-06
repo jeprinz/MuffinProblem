@@ -11,7 +11,7 @@ def mfloor(x):
 	return Fraction(math.floor(x))
 
 #Calculations for STATEMENT ONE
-def findABCD1(dat):
+def findQ1(dat):
 	(m,s,V,sV, sVm1) = dat
 	ceil = mceil(V*sV/sVm1)
 	floor = mfloor((V*sV)/sVm1)
@@ -19,30 +19,33 @@ def findABCD1(dat):
 	B = floor + (V-2)*(V - 1 - floor)
 	C = m/s - (V-1-ceil)*(m/s-V+2) - ceil*(1-m/s)
 	D = ceil*(V-1) + (V-1-ceil)*(V-2)
-	return (A,B,C,D)
-	
 
-def findMIN(A,B,C,D):
-	if A <= 0 and B == 0:
-		return 0
-	if A > 0 and B == 0 and D > 0:
-		return C/D
-	if C <= 0 and D == 0:
-		return 0
-	if A > 0 and B == 0 and C > 0 and D == 0:
-		return math.inf
-	if A > 0 and B == 0 and D < 0:
-		return math.inf
-	if B < 0 and C > 0 and D == 0:
-		return math.inf
-	if B > 0 and C > 0 and D == 0:
-		return A/B
-	if B > 0 and D > 0:
-		return min(A/B, C/D)
+	Q1p = None
+	if A <= 0:
+		Q1p = 0
+	elif C <= 0:
+		Q1p = 0
+	elif A > 0 and B > 0 and C > 0 and D > 0:
+		Q1p = min(A/B, C/D)
+	elif A > 0 and B > 0 and C > 0 and D <= 0:	
+		Q1p = A/B
+	elif A > 0 and B <= 0 and C > 0 and D > 0:
+		Q1p = C/D
+	elif A > 0 and B <= 0 and C > 0 and D <= 0:
+		Q1p = math.inf
+	
+	lhs = max((V - 2)/(2*V - 3), Q1p)
+	rhs = min(m/(s*V), (V - 1 - m/s)/(V - 1), (Fraction(1,2) - m/s + V - 2)/(V - 2))
+	if lhs <= rhs:
+		return lhs
+	else:
+		return 1
+
+	
 
 #Calculations for STATEMENT TWO
 	
-def findABCD2(dat):
+def findQ2(dat):
 	(m,s,V,sV, sVm1) = dat
 	floor = mfloor((V-1)*sVm1/sV)
 	A = m/s - (V - floor) * (1 - m/s)
@@ -50,7 +53,27 @@ def findABCD2(dat):
 	ceil = mceil((V-1)*sVm1 / sV)
 	C = ceil * (V - m/s - 1) + (V - ceil) * m/s - m/s
 	D = ceil * (V - 2) + (V - ceil) * (V - 1)
-	return (A,B,C,D)
+
+	Q1p = None
+	if A <= 0:
+		Q1p = 0
+	elif C <= 0:
+		Q1p = 0
+	elif B > 0 and D > 0:
+		Q1p = min(A/B, C/D)
+	elif A > 0 and B > 0 and C > 0 and D <= 0:	
+		Q1p = A/B
+	elif A > 0 and B <= 0 and C > 0 and D > 0:
+		Q1p = C/D
+	elif A > 0 and B <= 0 and C > 0 and D <= 0:
+		Q1p = math.inf
+
+	lhs = max((V - 2)/(2*V - 3), Q1p)
+	rhs = min(m/(s*V), (V - 1 - m/s)/(V - 1), (m/s - Fraction(1,2))/(V - 1))
+	if lhs <= rhs:
+		return lhs
+	else:
+		return 1
 
 def findQ7(m,s,sV,sVm1,V):
 
@@ -256,13 +279,8 @@ def findQ(m,s, spew=True):
 
 	#now, calculate Qv as per the paper
 
-	Q1, Q2, Q3, Q4, Q5, Q6 = 1,1,1,1,1,1
-	Q1 = MINONE
-	if MINONE == None or not PREM1(dat, Q1, MINONE):
-		Q1 = 1
-	Q2 = MINTWO
-	if MINTWO == None or not PREM2(dat, Q2, MINTWO):
-		Q2 = 1
+	Q1 = findQ1(dat)
+	Q2 = findQ2(dat)
 	Q3 = (V - (m/s) - Fraction(3,2)) / (V-2)
 	if not PREM3(dat, Q3):
 		Q3 = 1

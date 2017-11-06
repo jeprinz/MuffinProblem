@@ -255,13 +255,13 @@ def contradictions(vShares, vm1Shares, T, V, Qs):#return (boolean is there contr
 		a1, b1 = vInteral
 		a2, b2 = vm1Interval
 
-		
-	
-	
-	
-	
-			
-		
+		left1 = (T - V*R.eval(Qs))/(a2.eval(Qs) - R.eval(Qs))
+		right1 = (T - L.eval(Qs)*V)/(a1.eval(Qs) - L.eval(Qs))
+
+		left2 = (T - (V-1)*R.eval(Qs)) / (b2.eval(Qs) - R.eval(Qs))
+		right2 = (T - L.eval(Qs)*(V-1)) / (b1.eval(Qs) - L.eval(Qs))
+
+		contradict = right1 < left2 or right2 < left1
 
 
 def printIntervals(ints, Qs):
