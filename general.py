@@ -206,31 +206,31 @@ def constrain(m,s, Qs):
 
 	Qmin = 0#Qs
 
+	#note to self: adding thing where if A or B is [], then just return current Qmin
 	while True:
+		print("A, B")
+		print(A)
+		print(B)
+		print("with Qmin = " + str(Qmin))
 		oldA, oldB, oldM = A, B, M
-		#print("M, A, B:")
-		#printIntervals(M, Qs)
-		#printIntervals(A, Qs)
-		#printIntervals(B, Qs)
-		#print('A types:')
-		#print([type(interval) for interval in A])
-		#print('constrains')
 		(M, Qminm) = constrainToSumT(M, 2, 1, Qs)
 		(A, Qmina) = constrainToSumT(A, V - 1, m/s, Qs)
 		(B, Qminb) = constrainToSumT(B, V, m/s, Qs)
-		#print("M, A, B:")
-		#printIntervals(M, Qs)
-		#printIntervals(A, Qs)
-		#printIntervals(B, Qs)
-		#print('A types:')
-		#print([type(interval) for interval in A])
-		#print('intersections')
 		Qmin = max(Qmin, Qmina, Qminb, Qminm)
+		print("with Qmin after constrain = " + str(Qmin) + "and Qmina=%s, Qminb=%s, Qminc=%s" %(str(Qmina), str(Qminb), str(Qminm)))
+		print("A, B, M after constrain")
+		print(A)
+		print(B)
+		print(M)
 		(A, Qmina) = intersection(A, M, Qs)
 		(B, Qminb) = intersection(B, M, Qs)
 		(M, Qminm) = union(A + B, Qs)
 		Qmin = max(Qmin, Qmina, Qminb, Qminm)
+		#print("with Qmin after intersection = " + str(Qmin))
 		if oldA == A and oldB == B and oldM == M:
+			break
+		if A == [] or B == []:
+			print('breaking because empty: A = ' + str(A) + ' B = ' + str(B))
 			break
 	return M, Qmin
 

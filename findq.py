@@ -257,28 +257,6 @@ def findQ(m,s, spew=True):
 		print("sVm1 is zero, so this in not a case handled by the interval theorum.")
 		return 1
 
-	#calc MINONE
-	A1,B1,C1,D1 = findABCD1(dat)
-	if spew:
-		print("A1: " + str(A1))
-		print("B1: " + str(B1))
-		print("C1: " + str(C1))
-		print("D1: " + str(D1))
-	MINONE = findMIN(A1,B1,C1,D1)
-	if spew: print("MINONE: " + str(MINONE))
-
-	#calc MINTWO
-	A2,B2,C2,D2 = findABCD2(dat)
-	if spew:
-		print("A2: " + str(A2))
-		print("B2: " + str(B2))
-		print("C2: " + str(C2))
-		print("D2: " + str(D2))
-	MINTWO = findMIN(A2,B2,C2,D2)
-	if spew: print("MINTWO: " + str(MINTWO))
-
-	#now, calculate Qv as per the paper
-
 	Q1 = findQ1(dat)
 	Q2 = findQ2(dat)
 	Q3 = (V - (m/s) - Fraction(3,2)) / (V-2)
