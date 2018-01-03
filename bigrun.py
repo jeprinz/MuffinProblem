@@ -108,12 +108,27 @@ def graphMOverS(maxM, maxS):
 				pieces, d = getPiecesDenom(m,s)
 				bound = float(pieces[0])/float(d)
 				mOverS = float(m)/float(s)
-				#adding arctan here
-				mOverS = math.atan(mOverS)
 				if hasElem:
 					lines.append(str(mOverS) + ", " + str(bound))
 	text = "\n".join(lines)
 	text_file = open("plot.csv", "w")
+	text_file.write(text)
+	text_file.close()
+
+def graphMOverSFunky(maxM, maxS):
+	lines = []
+	for m in range(1, maxM+1):
+		values = []
+		for s in range(1, maxS+1):
+			if m > s:
+				(m,s,d,pieces,hasElem) = getRow(m,s)
+				pieces, d = getPiecesDenom(m,s)
+				bound = float(pieces[0])/float(d)
+				mOverS = float(m)/float(s)
+				if hasElem:
+					lines.append(str(mOverS) + ", " + str(bound*(s/m)**0.5))
+	text = "\n".join(lines)
+	text_file = open("funky-plot.csv", "w")
 	text_file.write(text)
 	text_file.close()
 
@@ -160,8 +175,10 @@ def getProcedures(m,s,Q=None):
 	if Q == None:
 		pieces, d = getPiecesDenom(m,s)
 	else:
-		d = Q.denominator
-		numer = Q.numerator
+		#d = Q.denominator
+		#numer = Q.numerator
+		d = lcm(Q.denominator,s)
+		numer = Q.numerator * d / Q.denominator
 		lowest, highest = numer, d - numer #smallest and biggest pieces, working in units of 1/d
 		pieces = [n for n in range(lowest, highest+1)] #get all pieces
 		print("d = " + str(d))

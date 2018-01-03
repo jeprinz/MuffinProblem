@@ -33,6 +33,7 @@ def getIntervals(m,s,Q,V):
 	f = m/s - (V-1)*Q
 	g = m/s - V + 2 + Q*(V-2)
 	intervals = Union(Interval(Q,f), Interval(g,1-Q))
+	print(intervals)
 	flipped = Union(Interval(Q, 1-g),Interval(1-f, 1-Q))
 	#return flippyDippy(intervals)
 	res = Intersection(intervals, flipped)
