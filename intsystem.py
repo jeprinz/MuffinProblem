@@ -1,5 +1,4 @@
 import math
-import smith
 import functools
 
 from sympy import *
