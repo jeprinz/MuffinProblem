@@ -181,12 +181,12 @@ def getProcedures(m,s,Q=None):
 		numer = Q.numerator * d / Q.denominator
 		lowest, highest = numer, d - numer #smallest and biggest pieces, working in units of 1/d
 		pieces = [n for n in range(lowest, highest+1)] #get all pieces
-		print("d = " + str(d))
-		print("pieces = " + str(pieces))
-	procedures = integers.solve(m,s,d=d, pieces=pieces, intervals=Interval(0,1))
+	procedures = list(integers.solve(m,s,d=d, pieces=pieces, intervals=Interval(0,1)))
 	print("denominator: " + str(d))
 	for procedure in procedures:
 		print(procedureToString(procedure))
+	if len(procedures) == 0:
+		print('No procedures found')
 	
 	
 def try6multiples(upto, start=1):
