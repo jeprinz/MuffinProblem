@@ -64,7 +64,8 @@ def findCutPoints(eVals, a, d, k=0):
 	total = S(3*d*k + a + d) / denom #total muffin for one student
 	X = sympy.symbols('X')
 
-	values = [val / denom for val in [d*k + X, d*k+a/2, d*k-X, d*k+2*X, d*k+2*X, d*k+(a+d)/2, d*k+a+d - 2*X]]
+	values = [val / denom for val in [d*k + X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+(a+d)/2, d*k+a+d - 2*X]]
+	print("values: " + str(values))
 
 	#The four intervals reffered to in the paper. Note that 0 indexing means e.g. interval 2 is Intervals[1]
 	Intervals = [(values[0], values[1]), (values[1], values[2]), (values[4], values[5]), (values[5], values[6])]
@@ -83,11 +84,11 @@ def findCutPoints(eVals, a, d, k=0):
 		interval = sympy.solve([minValue <= total, total <= maxValue], X).as_set()
 
 		#note 2a/5 below. Bill sent me this bound in an email. Is this actually where X should start?
-		if interval == sympy.EmptySet() or interval.end <= 2*a/5:#if the constraint can never be met or is smaller than X can be
+		if interval == sympy.EmptySet() or interval.end <= 0:# 2*a/5:#if the constraint can never be met or is smaller than X can be
 			always.append(eVar == 0)#add constraint that variable is zero
 		else:#otherwise if the constraint can be met
 			cuts.append((interval.end, eVar == 0))#add on (min val of X where constraint can't be met, constraint that variable is zero)
-	cuts = sorted(cuts, key=lambda pair: pair[0])
+	cuts = reversed(sorted(cuts))
 	return (always, cuts)
 			
 def findX(a,d,k=0):
@@ -105,33 +106,12 @@ def findX(a,d,k=0):
 	
 	for cut in cuts:
 		print("Trying cut " + str(cut[0]))
-		#print(prob)
+		if cut[0] ==1:
+			print(prob)
 		status = prob.solve()
 		if status != 1:
-			print("No solution found, moving to next cut")
+			print("No solution found, moving to next cut and adding constraint")
+			prob += cut[1]
 		else:
 			print("found solution, returning")
 			return cut[0]
-	
-	
-		
-
-#from other file
-def solve(m, minVal, maxVal):
-	"""takes an augmented matrix (sympy matrix) and returns a solution or None if no solution"""
-	rows = m.tolist()
-	numVars = m.cols - 1
-	variables = [LpVariable('x' + str(i), minVal, maxVal, LpInteger) for i in range(numVars)] #make variables x0, x1, x2, ...
-	prob = LpProblem("The problem", LpMinimize) #define pulp problem
-	for row in rows: #make one constraint for each row in matrix
-		varVector = row[:-1] #get the part of the matrix that corresponds with variables
-		value = row[-1] #gets constant on other side of equals sign
-		dotProduct = [var * coeff for (var, coeff) in zip(variables, varVector)]# if coeff != 0] #list of coefficients * xi
-		prob += functools.reduce(lambda a, b: a + b, dotProduct) == value #make equation and add to problem
-	status = prob.solve() #solve it
-	if status != 1:
-		return None
-	else:
-		return [int(var.varValue) for var in variables] #return list of values of variables
-
-
