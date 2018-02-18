@@ -36,7 +36,7 @@ def getPieces(d, intervals):
 		
 
 
-def solve(m,s, d=None, intervals=None, pieces=None, spew=False):
+def solve(m,s, d=None, intervals=None, pieces=None, spew=False, returnMatrix=False):
 	"""Creates matrix system that represents any possible solution of f(m,s) given denom d and assumption Q"""
 	#calculate some initial things we need
 	if intervals == None:
@@ -49,10 +49,13 @@ def solve(m,s, d=None, intervals=None, pieces=None, spew=False):
 	lowest, highest = int(points[0] * d), int(points[-1]*d + 1) #smallest and biggest pieces, working in units of 1/d
 	#lowest, highest, intervals = 1, d, Interval(0,1)
 	if pieces == None:
+		print("test: " + str([n for n in range(lowest, highest) if True]))
+		print("test: " + str(intervals.contains(S(13)/24)))
 		pieces = [n for n in range(lowest, highest) if intervals.contains(S(n)/d)] #get all pieces
 	if spew:
 		#pieces = getPieces(d, intervals) #this line would use only endpoints
 		print("pieces: " + str(pieces))
+		print("intervals: " + str(intervals))
 	muffins = list(waysToAddTo(pieces, d)) #all possible muffins
 	students = list(waysToAddTo(pieces, m*d//s)) #all possible students
 
@@ -90,39 +93,43 @@ def solve(m,s, d=None, intervals=None, pieces=None, spew=False):
 
 	#return Matrix(M)
 
-	augmented = Matrix(M).rref()[0]
 
+	if returnMatrix:
+		yield Matrix(M)
+	else:
 
-	#print("rref done")
+		augmented = Matrix(M).rref()[0]
 
-	(mat, b) = deAugment(augmented)
+		#print("rref done")
 
-	#solutions = constraintSolveMat(m,s,mat,b)
-	solution = intsystem.solve(augmented, 0, m)
-	if solution == None:
-		return []
-	solutions = [solution]
-		
+		(mat, b) = deAugment(augmented)
 
-	#print("The denominator is: " + str(d))
-	for res in solutions:
-		#print("A solution:")
-		#res = [res['x'+str(i)] for i in range(len(res))]#constraints library returns a dictionary thing, this gets number from it
+		#solutions = constraintSolveMat(m,s,mat,b)
+		solution = intsystem.solve(augmented, 0, m)
+		if solution == None:
+			return []
+		solutions = [solution]
+			
 
-		muffinList, studentList = [],[]
+		#print("The denominator is: " + str(d))
+		for res in solutions:
+			#print("A solution:")
+			#res = [res['x'+str(i)] for i in range(len(res))]#constraints library returns a dictionary thing, this gets number from it
 
-		index = 0
-		for student in students:
-			if res[index] != 0:
-				#print(str(res[index]) + " students gets" + str(student) + '\\\\')
-				studentList.append((res[index], student))
-			index += 1
-		for muffin in muffins:
-			if res[index] != 0:
-				#print(str(res[index]) + " muffins split into " + str(muffin) + '\\\\')
-				muffinList.append((res[index], muffin))
-			index += 1
-		yield (muffinList, studentList)
+			muffinList, studentList = [],[]
+
+			index = 0
+			for student in students:
+				if res[index] != 0:
+					#print(str(res[index]) + " students gets" + str(student) + '\\\\')
+					studentList.append((res[index], student))
+				index += 1
+			for muffin in muffins:
+				if res[index] != 0:
+					#print(str(res[index]) + " muffins split into " + str(muffin) + '\\\\')
+					muffinList.append((res[index], muffin))
+				index += 1
+			yield (muffinList, studentList)
 		
 
 

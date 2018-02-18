@@ -189,16 +189,27 @@ def getProcedures(m,s,Q=None):
 		print('No procedures found')
 	
 	
-def try6multiples(upto, start=1):
-	text = []
-	for k in range(start,upto+1):
-		m = 6*k+3
-		s = 6*k+1
-		Q = S(4*k+1)/S(12*k+2)
+def testUpperBounds(ms, ss, Qs):
+	"""ms is a list of ms values, ss is a list of s values, Qs is a list of Q values.
+	Will check if can find lower bound for each Q value, and output list of booleans, where each boolean
+	corresponds to whether a bound was found for that particular case"""
+	results = []
+	for (m,s,Q) in zip(ms,ss,Qs):
 		interval = Interval(Q, 1-Q)
 		pieces, d = intervalToPieces(m,s,interval)
 		procedures = integers.solve(m,s,d=d, pieces=pieces, intervals=Interval(0,1))
-		text.append("m, s = " + str((m,s)) + "\ndenominator=" + str(d) + '\n' + procedureToString(next(procedures)) + '\n')
-	return '\n'.join(text)
+		if next(procedures, False):
+			results.append(True)
+		else:
+			results.append(False)
+	return results
 
-	
+def testConjecture(iToM, iToS, iToQ, maxI):
+	"""Tests a conjecture of the form f(iToM(i), iToS(i)) >= iToQ(i)
+	for each i from 0 to maxI"""
+	ms = [iToM(i) for i in range(0, maxI+1)]
+	ss = [iToS(i) for i in range(0, maxI+1)]
+	Qs = [iToQ(i) for i in range(0, maxI+1)]
+	return testUpperBounds(ms, ss, Qs)
+
+
