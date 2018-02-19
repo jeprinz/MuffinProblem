@@ -2,6 +2,7 @@ from pulp import *
 from functools import reduce
 import sympy
 import interval
+from fractions import Fraction
 
 #####################################################################
 # This code is intended to run Bill's crazy program with all the cases for the V=3 case
@@ -9,6 +10,7 @@ import interval
 ##################################################################### 
 
 X = sympy.symbols('X')
+o = Fraction(1)
 
 def listsAddingTo(length, total):
 	"""Returns all possible lists of length elements adding to total"""
@@ -90,16 +92,20 @@ def findX(intervals, totals, a, d, k):
 	for constraint in always: #NOTE FOR DEBUGGING LATER: ITS POSSIBLE THESE LINES WERE COMMENTED OUT LAST MEETING
 		prob += constraint
 	
+	currentGuess = 0
+
 	for cut in cuts:
-		print("Trying cut " + str(cut[0]))
+		#print("Trying cut " + str(cut[0]))
 		#print(prob)
 		status = prob.solve()
 		if status != 1:
-			print("No solution found, moving to next cut and adding constraint")
+			#print("No solution found, answer is previous try")
 			prob += cut[1]
+			return currentGuess
 		else:
-			print("found solution, returning")
+			#print("found solution, returning")
 			prob += cut[1]
+			currentGuess = cut[0]
 			#return cut[0]
 
 def doFirstCase(a,d,k):
@@ -119,7 +125,7 @@ def doFirstCase(a,d,k):
 	Intervals = [(values[0], values[1]), (values[1], values[2]), (values[4], values[5]), (values[5], values[6])]
 	totals = [a+d, a+d, 2*d-a, 2*d-a]
 
-	findX(Intervals, totals, a, d, k)
+	return findX(Intervals, totals, a, d, k)
 
 def doSecondCase(a,d,k):
 	#This is case where a <= 5d/7
@@ -135,5 +141,59 @@ def doSecondCase(a,d,k):
 	intervals = [(vald[0],vald[1]),(vald[1],vald[2]),(vald[4],vald[5]),(vald[6],vald[7]),(vald[7],vald[8]),(vald[10],vald[11])]
 	totals = [a+d, a+d, y, 2*d-a-y, 2*d-a-y, y]
 
-	findX(intervals, totals, a, d, k)
+	return findX(intervals, totals, a, d, k)
 	
+def doSecondCase(a,d,k):
+	#This is case where a <= 5d/7
+	S = sympy.S
+	a, d, k = S(a), S(d), S(k)
+
+	#Add variable in interval sizes
+	y = LpVariable('y', 0, 2*d + a, LpInteger)
+
+	denom = 3*d*k+a
+	values = [d*k+X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+2*a-2*X, d*k+3*X, d*k+(a+d)/2, d*k+a+d-3*X, d*k+a+d-3*X, d*k+d-a+2*X, d*k+a+d-2*X]
+	vald = [val / denom for val in values]
+	intervals = [(vald[0],vald[1]),(vald[1],vald[2]),(vald[4],vald[5]),(vald[6],vald[7]),(vald[7],vald[8]),(vald[10],vald[11])]
+	totals = [a+d, a+d, y, 2*d-a-y, 2*d-a-y, y]
+
+	return findX(intervals, totals, a, d, k)
+
+def doThirdCase(a,d,k):
+	
+	S = sympy.S
+	a, d, k = S(a), S(d), S(k)
+
+	#Add variable in interval sizes
+	y = LpVariable('y', 0, 2*d + a, LpInteger)
+
+	denom = 3*d*k+a
+	values = [d*k+X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+a+d-3*X, d*k+d-a+2*X, d*k+d-a+2*X, d*k+(a+d)/2, d*k+2*a-2*X, d*k+3*X, d*k+a+d-2*X]
+	vald = [val / denom for val in values]
+	intervals = [(vald[0],vald[1]),(vald[1],vald[2]),(vald[4],vald[5]),(vald[7],vald[8]),(vald[8],vald[9]),(vald[10],vald[11])]
+	totals = [a+d, a+d, y, 2*d-a-y, 2*d-a-y, y]
+
+	return findX(intervals, totals, a, d, k)
+	
+
+def solve(a,d,k):
+	a = o*a
+	d = o*d
+	k = o*k
+	X=0
+	if 2*d+1 <= a <= 3*d:
+		return o/3
+	elif a <= 5*d/7:
+		X = doSecondCase(a,d,k)
+	elif a <= d:
+		X = doThirdCase(a,d,k)
+	else:
+		X = doFirstCase(a,d,k)
+	return (d*k + X)/(3*d*k+a)
+		
+def f(m,s):
+	m,s=o*m,o*s
+	d = m - s
+	a = s % (3*d)
+	k = (s - a)/(3*d)
+	return solve(a,d,k)
