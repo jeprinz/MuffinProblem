@@ -6,7 +6,9 @@ import interval
 #####################################################################
 # This code is intended to run Bill's crazy program with all the cases for the V=3 case
 # In addition, this is all for the case where d <= a <= 2d-1
-#####################################################################
+##################################################################### 
+
+X = sympy.symbols('X')
 
 def listsAddingTo(length, total):
 	"""Returns all possible lists of length elements adding to total"""
@@ -24,7 +26,8 @@ def makeEVals(d, numIntervals):
 	"""Returns a bunch of LpVariable objects of all variables from the paper.
 	Remember, for f(m,s), a = s and d = m-s"""
 	eVals = {}
-	for index in listsAddingTo(numIntervals, 3):
+	for l in listsAddingTo(numIntervals, 3):
+		index = tuple(l)
 		name = "e_" + str(index)
 		eVals[index] = LpVariable(name, 0, 2*d, LpInteger) #number of 3 students is 2d when V=3
 	return eVals
@@ -40,7 +43,7 @@ def makeEasyConstraints(eVals, d, intervalTotals):
 	intervalConstraints = [sum == intervalTotal for (sum, intervalTotal) in zip(sums, intervalTotals)]
 	return intervalConstraints + [total == 2*d] #there are 2d 3-students
 
-def findCutPoints(eVals, intervals):
+def findCutPoints(eVals, intervals, a, d, k):
 	"""Finds values of X where below that value, some e variable must be 0.
 	returns (list of constraints that always happen, cut list)
 	cut list is ordered list of (Xcut, constraint)
@@ -50,14 +53,16 @@ def findCutPoints(eVals, intervals):
 	always = []
 	cuts = []
 
+	total = sympy.S(a+d+3*d*k)/(a+3*d*k)
+
 	#Loop through each e variable, and find the minimum X that allows it to be nonzero.
 	for index in eVals: 
 		eVar = eVals[index]
 
 		#minimum amount of muffin that can be found in given intervals from index
-		minValue = sum(numIntervals * interval[0] for numInInterval, interval in zip(index, intervals))
+		minValue = sum(numInInterval * interval[0] for numInInterval, interval in zip(index, intervals))
 		#maximum amount of muffin that can be found in given intervals from index
-		maxValue = sum(numIntervals * interval[1] for numInInterval, interval in zip(index, intervals))
+		maxValue = sum(numInInterval * interval[1] for numInInterval, interval in zip(index, intervals))
 
 		#X values which will allow such a student to exist
 		allowedXValues = sympy.solve([minValue <= total, total <= maxValue], X).as_set()
@@ -70,7 +75,7 @@ def findCutPoints(eVals, intervals):
 	cuts = sorted(cuts)
 	return (always, cuts)
 			
-def findX(d, intervals, totals):
+def findX(intervals, totals, a, d, k):
 	"""intervals is a list of intervals [(min(X), max(X)), (min(X), max(X))],
 	totals is a list of the same length which has all of the total amount of peices in the intervals"""
 	prob = LpProblem("The problem", LpMinimize) #define pulp problem
@@ -80,7 +85,7 @@ def findX(d, intervals, totals):
 	for constraint in constraints:
 		prob += constraint
 	
-	(always, cuts) = findCutPoints(eVals, intervals)
+	(always, cuts) = findCutPoints(eVals, intervals, a, d, k)
 
 	for constraint in always: #NOTE FOR DEBUGGING LATER: ITS POSSIBLE THESE LINES WERE COMMENTED OUT LAST MEETING
 		prob += constraint
@@ -97,7 +102,7 @@ def findX(d, intervals, totals):
 			prob += cut[1]
 			#return cut[0]
 
-def makeFirstCaseIntervals(a,d,k):
+def doFirstCase(a,d,k):
 	S = sympy.S
 	a, d, k = S(a), S(d), S(k)
 	
@@ -105,7 +110,6 @@ def makeFirstCaseIntervals(a,d,k):
 	denom = 3*d*k + a #this comes up alot
 
 	total = S(3*d*k + a + d) / denom #total muffin for one student
-	X = sympy.symbols('X')
 
 	values = [val / denom for val in [d*k + X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+(a+d)/2, d*k+a+d - 2*X]]
 	print("values: " + str(values))
@@ -113,4 +117,23 @@ def makeFirstCaseIntervals(a,d,k):
 
 	#The four intervals reffered to in the paper. Note that 0 indexing means e.g. interval 2 is Intervals[1]
 	Intervals = [(values[0], values[1]), (values[1], values[2]), (values[4], values[5]), (values[5], values[6])]
-	return Intervals
+	totals = [a+d, a+d, 2*d-a, 2*d-a]
+
+	findX(Intervals, totals, a, d, k)
+
+def doSecondCase(a,d,k):
+	#This is case where a <= 5d/7
+	S = sympy.S
+	a, d, k = S(a), S(d), S(k)
+
+	#Add variable in interval sizes
+	y = LpVariable('y', 0, 2*d + a, LpInteger)
+
+	denom = 3*d*k+a
+	values = [d*k+X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+2*a-2*X, d*k+3*X, d*k+(a+d)/2, d*k+a+d-3*X, d*k+a+d-3*X, d*k+d-a+2*X, d*k+a+d-2*X]
+	vald = [val / denom for val in values]
+	intervals = [(vald[0],vald[1]),(vald[1],vald[2]),(vald[4],vald[5]),(vald[6],vald[7]),(vald[7],vald[8]),(vald[10],vald[11])]
+	totals = [a+d, a+d, y, 2*d-a-y, 2*d-a-y, y]
+
+	findX(intervals, totals, a, d, k)
+	
