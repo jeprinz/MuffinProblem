@@ -67,7 +67,8 @@ def findCutPoints(eVals, intervals, a, d, k):
 		maxValue = sum(numInInterval * interval[1] for numInInterval, interval in zip(index, intervals))
 
 		#X values which will allow such a student to exist
-		allowedXValues = sympy.solve([minValue <= total, total <= maxValue], X).as_set()
+		#allowedXValues = sympy.solve([minValue <= total, total <= maxValue], X).as_set()
+		allowedXValues = manualSolveALessBLessC(minValue, total, maxValue)
 
 		#note 2a/5 below. Bill sent me this bound in an email. Is this actually where X should start?
 		if allowedXValues == sympy.EmptySet() or allowedXValues.end <= 0:# 2*a/5:#if the constraint can never be met or is smaller than X can be
@@ -76,6 +77,32 @@ def findCutPoints(eVals, intervals, a, d, k):
 			cuts.append((allowedXValues.end, eVar == 0))#add on (min val of X where constraint can't be met, constraint that variable is zero)
 	cuts = sorted(cuts)
 	return (always, cuts)
+
+def manualSolveSystem(linear, total):
+	"""linear should be A+B*X, total should be number
+	returns set X values so that linear <= total"""
+	coeffs = sympy.Poly(linear, X).all_coeffs()
+	A,B = 0,0
+	if len(coeffs) == 1:
+		A = coeffs[0]
+		B = 0
+	else:
+		B, A = coeffs
+	
+	if B > 0:
+		return sympy.Interval(-sympy.oo, (total-A)/B)
+	elif B < 0:
+		return sympy.Interval((total-A)/B, sympy.oo)
+	else:
+		if A <= total:
+			return sympy.Interval(-sympy.oo, sympy.oo)
+		else:
+			return sympy.EmptySet()
+
+def manualSolveALessBLessC(A,B,C):
+	"""B is number, A and C are linear functions of X
+	returns set of allowed X so A <= B <= C"""
+	return sympy.Intersection(manualSolveSystem(A,B), manualSolveSystem(-C,-B))
 			
 def findX(intervals, totals, a, d, k):
 	"""intervals is a list of intervals [(min(X), max(X)), (min(X), max(X))],
@@ -118,8 +145,6 @@ def doFirstCase(a,d,k):
 	total = S(3*d*k + a + d) / denom #total muffin for one student
 
 	values = [val / denom for val in [d*k + X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+(a+d)/2, d*k+a+d - 2*X]]
-	print("values: " + str(values))
-	print("bill values: " + str([val*(3*d*k+a) - d*k for val in values]))
 
 	#The four intervals reffered to in the paper. Note that 0 indexing means e.g. interval 2 is Intervals[1]
 	Intervals = [(values[0], values[1]), (values[1], values[2]), (values[4], values[5]), (values[5], values[6])]
