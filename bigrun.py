@@ -4,10 +4,14 @@ import symflip
 import math
 from symflip import lcm
 import findq
+import V3program
+from fractions import Fraction
 
 #this file contains a bunch of functions to generate procedures for the muffin problem.
 #This file is the interface that I use to generate procedures.
 #For example, to make procedures for f(m,s), run getProcedures(m,s), or optionally getProcedures(m,s,Q=Fraction(,))
+
+o = Fraction(1)
 
 
 def floorciel(m,s):
@@ -212,4 +216,18 @@ def testConjecture(iToM, iToS, iToQ, maxI):
 	Qs = [iToQ(i) for i in range(0, maxI+1)]
 	return testUpperBounds(ms, ss, Qs)
 
+def testV3Program(maxA, maxD, maxK):
+	for a in range(1, maxA+1):
+		for d in range(1, maxD+1):
+			if math.gcd(a,d) == 1 and (a+d)%a != 0:
+				X = V3program.solve(a,d,0)
+				print("Testing a,d = %d,%d"%(a,d))
+				for k in range(0, maxK+1):
+					res = testUpperBounds([a+d+3*d*k], [a+3*d*k], [(o*d*k + X)/(3*d*k+a)])[0]
+					if not res:
+						print("Failed on a,d=%d,%d with X = %s"%(a,d,str(X)))
+					else:
+						print("f(%d, %d) = %s"%(a+d+3*d*k, a+3*d*k, str((o*d*k + X)/(3*d*k+a))))
+	print("Done")
+					
 

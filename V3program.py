@@ -206,19 +206,30 @@ def solve(a,d,k):
 	d = o*d
 	k = o*k
 	X=0
+	print((a,d,k))
 	if 2*d+1 <= a <= 3*d:
 		return o/3
 	elif a <= 5*d/7:
+		print(2)
 		X = doSecondCase(a,d,k)
 	elif a <= d:
+		print(3)
 		X = doThirdCase(a,d,k)
-	else:
+	elif d <= a <= d-1:
+		print(1)
 		X = doFirstCase(a,d,k)
+	elif d == 1 and a == 2:
+		return o/3 + o/3/(a+3*d*k)
+	else:
+		print("Did not meet any case for a,d,k = %d,%d,%d" % (a,d,k))
+		return o/(a + 3*d*k)
 	return (d*k + X)/(3*d*k+a)
 		
 def f(m,s):
 	m,s=o*m,o*s
 	d = m - s
 	a = s % (3*d)
+	if a == 0:
+		a += 3*d
 	k = (s - a)/(3*d)
 	return solve(a,d,k)
