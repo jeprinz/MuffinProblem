@@ -221,13 +221,15 @@ def testV3Program(maxA, maxD, maxK):
 		for d in range(1, maxD+1):
 			if math.gcd(a,d) == 1 and (a+d)%a != 0:
 				X = V3program.solve(a,d,0)
-				print("Testing a,d = %d,%d"%(a,d))
+				#print("Testing a,d = %d,%d"%(a,d))
 				for k in range(0, maxK+1):
-					res = testUpperBounds([a+d+3*d*k], [a+3*d*k], [(o*d*k + X)/(3*d*k+a)])[0]
+					#res = testUpperBounds([a+d+3*d*k], [a+3*d*k], [(o*d*k + X)/(3*d*k+a)])[0]
+					res = testUpperBounds([a+d+3*d*k], [a+3*d*k], [X])[0]
 					if not res:
 						print("Failed on a,d=%d,%d with X = %s"%(a,d,str(X)))
 					else:
-						print("f(%d, %d) = %s"%(a+d+3*d*k, a+3*d*k, str((o*d*k + X)/(3*d*k+a))))
+						print("f(%d, %d) = %s"%(a+d+3*d*k, a+3*d*k, str((X))))
+						pass
 	print("Done")
 					
 

@@ -206,17 +206,13 @@ def solve(a,d,k):
 	d = o*d
 	k = o*k
 	X=0
-	print((a,d,k))
 	if 2*d+1 <= a <= 3*d:
 		return o/3
 	elif a <= 5*d/7:
-		print(2)
 		X = doSecondCase(a,d,k)
 	elif a <= d:
-		print(3)
 		X = doThirdCase(a,d,k)
-	elif d <= a <= d-1:
-		print(1)
+	elif d <= a <= 2*d-1:
 		X = doFirstCase(a,d,k)
 	elif d == 1 and a == 2:
 		return o/3 + o/3/(a+3*d*k)
