@@ -10,10 +10,9 @@ from fractions import Fraction
 
 #Some constants
 X = sympy.symbols('X') #sympy variable X to be used in algebra
-a, d, k, y = sympy.symbols('a d k y') #also a, d, k variables
+a, d, k = sympy.symbols('a d k') #also a, d, k variables
 o = Fraction(1) #for convenience when I need a fraction value
 S = sympy.S
-yLp = LpVariable('y', 0, 2*d + a, LpInteger)
 
 def listsAddingTo(length, total):
 	"""Returns all possible lists of length elements adding to total"""
@@ -38,7 +37,6 @@ def makeEVals(d, numIntervals):
 	return eVals
 
 def makeEasyConstraints(eVals, intervalTotals, aNum, dNum, kNum):
-	substitutions = {a: aNum, d: dNum, k: kNum, y:yLp}
 
 	sums = [0] * len(intervalTotals)
 	total = 0
@@ -47,7 +45,7 @@ def makeEasyConstraints(eVals, intervalTotals, aNum, dNum, kNum):
 		for i in range(len(sums)):
 			sums[i] += index[i] * eVar
 		total += eVar
-	intervalConstraints = [sum == intervalTotal.subs(substitutions) for (sum, intervalTotal) in zip(sums, intervalTotals)]
+	intervalConstraints = [sum == intervalTotal for (sum, intervalTotal) in zip(sums, intervalTotals)]
 	return intervalConstraints + [total == 2*dNum] #there are 2d 3-students
 
 def findCutPoints(eVals, intervals, aNum, dNum, kNum):
@@ -57,7 +55,7 @@ def findCutPoints(eVals, intervals, aNum, dNum, kNum):
 	intervals is a list of [(min,max), (min,max)]
 	where min and max are sympy expressions with X as a variable"""
 
-	substitutions = {a: aNum, d: dNum, k: kNum, y: yLp}
+	substitutions = {a: aNum, d: dNum, k: kNum}
 
 	always = []
 	cuts = []
@@ -81,7 +79,8 @@ def findCutPoints(eVals, intervals, aNum, dNum, kNum):
 			XshouldBeGreaterThan = sympy.solve([minValue - total], X)
 		else:
 			XshouldBeGreaterThan = sympy.solve([maxValue - total], X)
-			
+
+		XshouldBeGreaterThan = getValFromDict(XshouldBeGreaterThan)
 
 		#note 2a/5 below. Bill sent me this bound in an email. Is this actually where X should start?
 		if allowedXValues == sympy.EmptySet() or allowedXValues.end <= 0:# 2*a/5:#if the constraint can never be met or is smaller than X can be
@@ -124,6 +123,13 @@ def manualSolveALessBLessC(A,B,C):
 		return (intersection, False)
 	else:
 		raise "This should never happen"
+
+def getValFromDict(x):
+	if x == []:
+		return None
+	for v in x.values():
+		return v
+
 			
 def findX(intervals, totals, aNum, dNum, kNum):
 	"""intervals is a list of intervals [(min(X), max(X)), (min(X), max(X))],
@@ -162,7 +168,7 @@ def doFirstCase(aNum,dNum,kNum):
 
 	#The four intervals reffered to in the paper. Note that 0 indexing means e.g. interval 2 is Intervals[1]
 	Intervals = [(values[0], values[1]), (values[1], values[2]), (values[4], values[5]), (values[5], values[6])]
-	totals = [a+d, a+d, 2*d-a, 2*d-a]
+	totals = [aNum+dNum, aNum+dNum, 2*dNum-aNum, 2*dNum-aNum]
 
 	return findX(Intervals, totals, aNum, dNum, kNum)
 
@@ -170,22 +176,25 @@ def doSecondCase(aNum,dNum,kNum):
 	#This is case where a <= 5d/7
 
 	#Add variable in interval sizes
+	y = LpVariable('y_pulp_var', 0, 2*dNum + aNum, LpInteger)
 
 	denom = 3*d*k+a
 	values = [d*k+X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+2*a-2*X, d*k+3*X, d*k+(a+d)/2, d*k+a+d-3*X, d*k+a+d-3*X, d*k+d-a+2*X, d*k+a+d-2*X]
 	vald = [val / denom for val in values]
 	intervals = [(vald[0],vald[1]),(vald[1],vald[2]),(vald[4],vald[5]),(vald[6],vald[7]),(vald[7],vald[8]),(vald[10],vald[11])]
-	totals = [a+d, a+d, y, 2*d-a-y, 2*d-a-y, y]
+	totals = [aNum+dNum, aNum+dNum, y, 2*dNum-aNum-y, 2*dNum-aNum-y, y]
 
 	return findX(intervals, totals, aNum, dNum, kNum)
 
 def doThirdCase(aNum,dNum,kNum):
 
+	y = LpVariable('y_pulp_var', 0, 2*dNum + aNum, LpInteger)
+
 	denom = 3*d*k+a
 	values = [d*k+X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+a+d-3*X, d*k+d-a+2*X, d*k+d-a+2*X, d*k+(a+d)/2, d*k+2*a-2*X, d*k+3*X, d*k+a+d-2*X]
 	vald = [val / denom for val in values]
 	intervals = [(vald[0],vald[1]),(vald[1],vald[2]),(vald[4],vald[5]),(vald[7],vald[8]),(vald[8],vald[9]),(vald[10],vald[11])]
-	totals = [a+d, a+d, y, 2*d-a-y, 2*d-a-y, y]
+	totals = [aNum+dNum, aNum+dNum, y, 2*dNum-aNum-y, 2*dNum-aNum-y, y]
 
 	return findX(intervals, totals, aNum, dNum, kNum)
 	
