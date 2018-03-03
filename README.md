@@ -1,6 +1,14 @@
-#This is a collection of a bunch of code that I've written for the muffin problem. I'll list the important files below:
+# This is a collection of code related to the muffin problem.
 
- - bigrun.py: use this file to actually generate procedures (see comment in file)
- - integers.py: The actual procedure generating code is all in here. (See latex write up for algorithm, and also pretty well commented)
- - findq.py: Calculates the interval theorem bounds
- - general.py: Preliminary code for my algorithm
+There are three main programs contained in this repository.
+
+## Procedure generation program
+The algorithm for the procedure generation program is described in the LaTeX write up (remember to put in repo). The main code based on that algorithm is located in the file integers.py.
+
+The main entry point to use the code is the function getProcedures in bigrun.py. Call this function with m, s, and Q, or by default will use an Interval theorem upper bound of Q.
+
+## V3 upper bound program.
+The V = 3 upper bound program is located in the file V3program.py.
+
+## Interval theorem upper bound program
+The second upper bound program is based on the interval theorem. It is located mainly in findq.py.
