@@ -147,14 +147,15 @@ def findX(intervals, totals, aNum, dNum, kNum):
 		prob += constraint
 	
 	currentGuess = 0
+	XCuts = []
 
 	for cut in cuts:
 		status = prob.solve()
 		if status != 1:
-			return currentGuess
+			return (currentGuess, XCuts)
 		else:
 			prob += cut[1]
-			print("Also " + str(cut[2]))
+			XCuts.append(str(cut[2]))
 			currentGuess = cut[0]
 
 def doFirstCase(aNum,dNum,kNum):
@@ -207,16 +208,18 @@ def solve(a,d,k):
 	if 2*d+1 <= a <= 3*d:
 		return o/3
 	elif a <= 5*d/7:
-		X = doSecondCase(a,d,k)
+		X,cuts = doSecondCase(a,d,k)
 	elif a <= d:
-		X = doThirdCase(a,d,k)
+		X,cuts = doThirdCase(a,d,k)
 	elif d <= a <= 2*d-1:
-		X = doFirstCase(a,d,k)
+		X,cuts = doFirstCase(a,d,k)
 	elif d == 1 and a == 2:
 		return o/3 + o/3/(a+3*d*k)
 	else:
 		print("Did not meet any case for a,d,k = %d,%d,%d" % (a,d,k))
 		return o/(a + 3*d*k)
+	for cut in cuts:
+		print("X > " + cut)
 	return (d*k + X)/(3*d*k+a)
 		
 def f(m,s):
