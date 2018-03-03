@@ -5,12 +5,15 @@ import interval
 from fractions import Fraction
 
 #####################################################################
-# This code is intended to run Bill's crazy program with all the cases for the V=3 case
-# In addition, this is all for the case where d <= a <= 2d-1
+# This code runs the algorithm associated with the "Fun with Algorithms" submission.
 ##################################################################### 
 
-X = sympy.symbols('X')
-o = Fraction(1)
+#Some constants
+X = sympy.symbols('X') #sympy variable X to be used in algebra
+a, d, k, y = sympy.symbols('a d k y') #also a, d, k variables
+o = Fraction(1) #for convenience when I need a fraction value
+S = sympy.S
+yLp = LpVariable('y', 0, 2*d + a, LpInteger)
 
 def listsAddingTo(length, total):
 	"""Returns all possible lists of length elements adding to total"""
@@ -34,7 +37,9 @@ def makeEVals(d, numIntervals):
 		eVals[index] = LpVariable(name, 0, 2*d, LpInteger) #number of 3 students is 2d when V=3
 	return eVals
 
-def makeEasyConstraints(eVals, d, intervalTotals):
+def makeEasyConstraints(eVals, intervalTotals, aNum, dNum, kNum):
+	substitutions = {a: aNum, d: dNum, k: kNum, y:yLp}
+
 	sums = [0] * len(intervalTotals)
 	total = 0
 	for index in eVals:
@@ -42,15 +47,17 @@ def makeEasyConstraints(eVals, d, intervalTotals):
 		for i in range(len(sums)):
 			sums[i] += index[i] * eVar
 		total += eVar
-	intervalConstraints = [sum == intervalTotal for (sum, intervalTotal) in zip(sums, intervalTotals)]
-	return intervalConstraints + [total == 2*d] #there are 2d 3-students
+	intervalConstraints = [sum == intervalTotal.subs(substitutions) for (sum, intervalTotal) in zip(sums, intervalTotals)]
+	return intervalConstraints + [total == 2*dNum] #there are 2d 3-students
 
-def findCutPoints(eVals, intervals, a, d, k):
+def findCutPoints(eVals, intervals, aNum, dNum, kNum):
 	"""Finds values of X where below that value, some e variable must be 0.
 	returns (list of constraints that always happen, cut list)
-	cut list is ordered list of (Xcut, constraint)
+	cut list is ordered list of (Xcut, constraint, expressionForXToBeGreaterThan)
 	intervals is a list of [(min,max), (min,max)]
 	where min and max are sympy expressions with X as a variable"""
+
+	substitutions = {a: aNum, d: dNum, k: kNum, y: yLp}
 
 	always = []
 	cuts = []
@@ -68,14 +75,20 @@ def findCutPoints(eVals, intervals, a, d, k):
 
 		#X values which will allow such a student to exist
 		#allowedXValues = sympy.solve([minValue <= total, total <= maxValue], X).as_set()
-		allowedXValues = manualSolveALessBLessC(minValue, total, maxValue)
+		allowedXValues, wasMinAndNotMax = manualSolveALessBLessC(minValue.subs(substitutions), total.subs(substitutions), maxValue.subs(substitutions))
+		XshouldBeGreaterThan = None
+		if wasMinAndNotMax:
+			XshouldBeGreaterThan = sympy.solve([minValue - total], X)
+		else:
+			XshouldBeGreaterThan = sympy.solve([maxValue - total], X)
+			
 
 		#note 2a/5 below. Bill sent me this bound in an email. Is this actually where X should start?
 		if allowedXValues == sympy.EmptySet() or allowedXValues.end <= 0:# 2*a/5:#if the constraint can never be met or is smaller than X can be
 			always.append(eVar == 0)#add constraint that variable is zero
 		else:#otherwise if the constraint can be met
-			cuts.append((allowedXValues.end, eVar == 0))#add on (min val of X where constraint can't be met, constraint that variable is zero)
-	cuts = sorted(cuts)
+			cuts.append((allowedXValues.end, eVar == 0, XshouldBeGreaterThan))#add on (min val of X where constraint can't be met, constraint that variable is zero)
+	cuts = sorted(cuts, key=lambda cut: cut[0])
 	return (always, cuts)
 
 def manualSolveSystem(linear, total):
@@ -102,42 +115,43 @@ def manualSolveSystem(linear, total):
 def manualSolveALessBLessC(A,B,C):
 	"""B is number, A and C are linear functions of X
 	returns set of allowed X so A <= B <= C"""
-	return sympy.Intersection(manualSolveSystem(A,B), manualSolveSystem(-C,-B))
+	int1 = manualSolveSystem(A,B)
+	int2 = manualSolveSystem(-C,-B)
+	intersection = sympy.Intersection(int1, int2)
+	if int1 == intersection:
+		return (intersection, True)
+	elif int2 == intersection:
+		return (intersection, False)
+	else:
+		raise "This should never happen"
 			
-def findX(intervals, totals, a, d, k):
+def findX(intervals, totals, aNum, dNum, kNum):
 	"""intervals is a list of intervals [(min(X), max(X)), (min(X), max(X))],
 	totals is a list of the same length which has all of the total amount of peices in the intervals"""
 	prob = LpProblem("The problem", LpMinimize) #define pulp problem
 
-	eVals = makeEVals(d, len(intervals))
-	constraints = makeEasyConstraints(eVals, d, totals)
+	eVals = makeEVals(dNum, len(intervals))
+	constraints = makeEasyConstraints(eVals, totals, aNum, dNum, kNum)
 	for constraint in constraints:
 		prob += constraint
 	
-	(always, cuts) = findCutPoints(eVals, intervals, a, d, k)
+	(always, cuts) = findCutPoints(eVals, intervals, aNum, dNum, kNum)
 
-	for constraint in always: #NOTE FOR DEBUGGING LATER: ITS POSSIBLE THESE LINES WERE COMMENTED OUT LAST MEETING
+	for constraint in always:
 		prob += constraint
 	
 	currentGuess = 0
 
 	for cut in cuts:
-		#print("Trying cut " + str(cut[0]))
-		#print(prob)
 		status = prob.solve()
 		if status != 1:
-			#print("No solution found, answer is previous try")
-			prob += cut[1]
 			return currentGuess
 		else:
-			#print("found solution, returning")
 			prob += cut[1]
+			print("Also " + str(cut[2]))
 			currentGuess = cut[0]
-			#return cut[0]
 
-def doFirstCase(a,d,k):
-	S = sympy.S
-	a, d, k = S(a), S(d), S(k)
+def doFirstCase(aNum,dNum,kNum):
 	
 	#the total is m/s = 3dk + a + d/3dk + a 
 	denom = 3*d*k + a #this comes up alot
@@ -150,15 +164,12 @@ def doFirstCase(a,d,k):
 	Intervals = [(values[0], values[1]), (values[1], values[2]), (values[4], values[5]), (values[5], values[6])]
 	totals = [a+d, a+d, 2*d-a, 2*d-a]
 
-	return findX(Intervals, totals, a, d, k)
+	return findX(Intervals, totals, aNum, dNum, kNum)
 
-def doSecondCase(a,d,k):
+def doSecondCase(aNum,dNum,kNum):
 	#This is case where a <= 5d/7
-	S = sympy.S
-	a, d, k = S(a), S(d), S(k)
 
 	#Add variable in interval sizes
-	y = LpVariable('y', 0, 2*d + a, LpInteger)
 
 	denom = 3*d*k+a
 	values = [d*k+X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+2*a-2*X, d*k+3*X, d*k+(a+d)/2, d*k+a+d-3*X, d*k+a+d-3*X, d*k+d-a+2*X, d*k+a+d-2*X]
@@ -166,31 +177,9 @@ def doSecondCase(a,d,k):
 	intervals = [(vald[0],vald[1]),(vald[1],vald[2]),(vald[4],vald[5]),(vald[6],vald[7]),(vald[7],vald[8]),(vald[10],vald[11])]
 	totals = [a+d, a+d, y, 2*d-a-y, 2*d-a-y, y]
 
-	return findX(intervals, totals, a, d, k)
-	
-def doSecondCase(a,d,k):
-	#This is case where a <= 5d/7
-	S = sympy.S
-	a, d, k = S(a), S(d), S(k)
+	return findX(intervals, totals, aNum, dNum, kNum)
 
-	#Add variable in interval sizes
-	y = LpVariable('y', 0, 2*d + a, LpInteger)
-
-	denom = 3*d*k+a
-	values = [d*k+X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+2*a-2*X, d*k+3*X, d*k+(a+d)/2, d*k+a+d-3*X, d*k+a+d-3*X, d*k+d-a+2*X, d*k+a+d-2*X]
-	vald = [val / denom for val in values]
-	intervals = [(vald[0],vald[1]),(vald[1],vald[2]),(vald[4],vald[5]),(vald[6],vald[7]),(vald[7],vald[8]),(vald[10],vald[11])]
-	totals = [a+d, a+d, y, 2*d-a-y, 2*d-a-y, y]
-
-	return findX(intervals, totals, a, d, k)
-
-def doThirdCase(a,d,k):
-	
-	S = sympy.S
-	a, d, k = S(a), S(d), S(k)
-
-	#Add variable in interval sizes
-	y = LpVariable('y', 0, 2*d + a, LpInteger)
+def doThirdCase(aNum,dNum,kNum):
 
 	denom = 3*d*k+a
 	values = [d*k+X, d*k+a/2, d*k+a-X, d*k+2*X, d*k+2*X, d*k+a+d-3*X, d*k+d-a+2*X, d*k+d-a+2*X, d*k+(a+d)/2, d*k+2*a-2*X, d*k+3*X, d*k+a+d-2*X]
@@ -198,7 +187,7 @@ def doThirdCase(a,d,k):
 	intervals = [(vald[0],vald[1]),(vald[1],vald[2]),(vald[4],vald[5]),(vald[7],vald[8]),(vald[8],vald[9]),(vald[10],vald[11])]
 	totals = [a+d, a+d, y, 2*d-a-y, 2*d-a-y, y]
 
-	return findX(intervals, totals, a, d, k)
+	return findX(intervals, totals, aNum, dNum, kNum)
 	
 
 def solve(a,d,k):
