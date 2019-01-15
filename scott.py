@@ -23,7 +23,7 @@ def scott(muffins, majors, minors):
 
     (Nm, Vm, Pm), (Ns1, Vs1, Ps1), (Ns2, Vs2, Ps2) = muffins, majors, minors
 
-    #Assumption 1: In optimal solution to the scott muffin problem, each muffin gives either exactly one piece to a minor
+    #Assumption: In optimal solution to the scott muffin problem, each muffin gives either exactly one piece to a minor
     #and the rest to majors (major type muffins), or exactly one piece to one minor, one piece to another minor, and the
     #rest to majors (minor type muffins).
 
@@ -36,8 +36,6 @@ def scott(muffins, majors, minors):
 
     #Assumption: If we can't make chains like that, then we have already found the constraint on the muffin problem.
     #Below, we check if its possible to make chains. The following equation does so:
-
-    print("scott((%s),(%s),(%s))"%(pfmap(muffins), pfmap(majors), pfmap(minors)))
 
     if Ns2 * Ps2 >= Nm + Ns2: #If this condition holds, then we can't divide minor students into chains (see below)
         #Assumption: under the above condition, the optimal solution involves making all major's pieces Vs1 / Ps1,
@@ -64,11 +62,6 @@ def scott(muffins, majors, minors):
             newMajors, newMinors = group2, group1
             newMajorsLostPieces, newMinorsLostPieces = int(P-1), int(P)
 
-        print("Printing information about subproblem in case 1:")
-        print(pfmap(minors))
-        print(pfmap(newMajors))
-        print(pfmap(newMinors))
-
         #Assumption: In this sub-problem, the smallest piece will be no smaller than Vs1/Ps1, so we have already found smallest piece size
         (subMuffinPieces, subMajorPieces, subMinorPieces) = scott(minors, newMajors, newMinors)#run the subproblem, next we need to reconstruct solution
 
@@ -82,7 +75,6 @@ def scott(muffins, majors, minors):
 
         #return Vs1 / Ps1
     elif Ns2 == 0: #must always be that Nm*Vm = Ns1*Vs1, and Nm*Pm = Ns1*Ps1, so Vm/Pm = Vs1/Ps1
-        print("subproblem case 2")
         #just divide all muffins and student evenly
         muffinPieces = [[Vm/Pm]*int(Pm)]*int(Nm)
         majorPieces = [[Vs1/Ps1]*int(Ps1)]*int(Ns1)
@@ -101,6 +93,10 @@ def scott(muffins, majors, minors):
     b = (Ns2 - a*(L - 1)) / L
 
     #But how do we actually make things work out with major type muffins, minor type muffins, and whatnot? Recursion!
+
+    #Assumption: In an optimal solution, the smallest piece going to a minor will be larger than the smallest piece going to a major,
+    #So we can freely permute the way that majors are connected to a chain. The only thing that matters is which majors are
+    #Connected to which chains. Therefore, 
     #We consider a new "scott muffin problem" with the old majors as new muffins, and the (L-1)-chains and L-chain as the
     #majors and minors. The old majors "give pieces to" the old minors.
 
@@ -113,19 +109,14 @@ def scott(muffins, majors, minors):
     newMajors = (b, (L*Ps2 - (L-1))*Vm - L*Vs2, newPs1)
     newMinors = (a, ((L-1)*Ps2 - (L-2))*Vm - (L-1)*Vs2, newPs2)
 
-    print("L = %s, a = %s, b = %s" %(L,a,b))
-
     #return scott(majors, newMajors, newMinors)
     (subMuffinPieces, subMajorPieces, subMinorPieces) = scott(majors, newMajors, newMinors)
-    #print("subproblem muffin, major, minor: " + str((subMuffinPieces, subMajorPieces, subMinorPieces)))
     deconstructedLChains = [deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L) for pieces in subMajorPieces] #L-chains became the sub-majors
     deconstructedLm1Chains = [deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L-1) for pieces in subMinorPieces] #(L-1)-chains became the sub-minors
     muffinPieces = sum([dchain[0] for dchain in deconstructedLChains + deconstructedLm1Chains], []) #get first elements out of tuples, so we have lists of students
     studentPieces = sum([dchain[1] for dchain in deconstructedLChains + deconstructedLm1Chains], [])
 
     return (muffinPieces, subMuffinPieces, studentPieces) #submuffins are majors, substudents are minors+muffins which were deconstructed
-
-    #TODO: use results from subproblem to construct final result.
 
 
 def f(m,s): #put it all together and calculate f(m,s)
