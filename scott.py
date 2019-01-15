@@ -1,11 +1,5 @@
 #implementation of Scott Huddleton's algorithm for the muffin problem
 
-#TODO: f(19,11) doesn't work. I think its because it should stop after 0 iterations somehow
-#also, neither does f(11,9)
-#f(11,6) gives negative output
-#f(52,31) doesn't work AND ITS ONE OF ERIK's EXAMPLES
-#f(47,14) is the same deal as above
-
 from fractions import Fraction
 import math
 import interval
@@ -15,8 +9,7 @@ def scott(muffins, majors, minors):
     """Computes the "scott muffin problem", which says, given Nm muffins and two groups of students,
     group 1 is the "majors" and group 2 is the "minors", cut up each muffin into Pm pieces and give to students.
     The value of each muffin is Vm, the value of majors are Vs1 and likewise for minors (meaning e.g. each major
-    recieves Vs1 total muffin). Furthermore, each muffin must give at least one piece to a minor, and it must be
-    that Vs1/Ps1 <= Vs2/Ps2.
+    recieves Vs1 total muffin). Furthermore, Vs1/Ps1 <= Vs2/Ps2.
     Find way of doing this so smallest piece is as large as possible.
 
     The following algorithm is (my best guess at figuring out) an algorithm created by Scott Huddleton from California.
@@ -24,13 +17,15 @@ def scott(muffins, majors, minors):
     algorithm are also optimal results for the traditional muffin problem.
     
     All inputs should be tuples of three Fraction objects.
-    The output will be a tuple of three lists of piece sizes, (muffinPieces, majorPieces, minorPieces)
-    which tells how to split the muffins, majors, and minors."""
+    The output will be a tuple of three lists of lists of piece sizes (muffinPieces, majorPieces, minorPieces)
+    which tells how to split the muffins, majors, and minors.
+    For example, muffinPieces is a list of lists, where each inner list represents a muffin"""
 
     (Nm, Vm, Pm), (Ns1, Vs1, Ps1), (Ns2, Vs2, Ps2) = muffins, majors, minors
 
-    #Assumption: muffins either give one piece to minor students and the rest to majors (major type muffins),
-    #OR give one piece to one minor and another piece to another minor (minor type muffins)
+    #Assumption 1: In optimal solution to the scott muffin problem, each muffin gives either exactly one piece to a minor
+    #and the rest to majors (major type muffins), or exactly one piece to one minor, one piece to another minor, and the
+    #rest to majors (minor type muffins).
 
     #There are (Ns2*Vs2 - Nm) minor type muffins, and (2*Nm - Ns2*Vs2) major type muffins.
     #We may make a graph with Ns2 nodes and (Ns2*Vs2 - Nm) edges. We call this the minor students graph.
@@ -44,8 +39,50 @@ def scott(muffins, majors, minors):
 
     print("scott((%s),(%s),(%s))"%(pfmap(muffins), pfmap(majors), pfmap(minors)))
 
-    if Ns2 * Ps2 >= Nm + Ns2 or Ns2 == 0:
-        return Vs1 / Ps1
+    if Ns2 * Ps2 >= Nm + Ns2: #If this condition holds, then we can't divide minor students into chains (see below)
+        #Assumption: under the above condition, the optimal solution involves making all major's pieces Vs1 / Ps1,
+        #and furthermore the optimal solution has these pieces distributed as evenly as possible in the muffins.
+        majorPieces = [[Vs1 / Ps1 for i in range(Ps2)] for j in range(Ns2)] #All major pieces of size Vs2 / Ps1
+
+        #We find minorPieces and muffinPieces by solving a new "scott muffin problem". First, we divide the major pieces
+        #among the muffins as evenly as possible, so
+        P = Fraction(math.ceil(Ns1*Ps1 / Nm)) #Some muffins give P pieces to majors, and some give P-1 pieces.
+        #a is the number that give P pieces, b is the number that give P-1
+        a = Ns1*Ps1 - (P - 1)*Nm
+        b = Nm - a
+        #After working out the math, that means that the two groups of muffins we get are as follows:
+        group1 = (a, Vm - (P-1)*Vs1/Ps1, Pm - (P-1))
+        group2 = (b, Vm - P*Vs1/Ps1, Pm - P)
+        #Next, check Vs/Ps to determine which group is majors and which group is minors. TODO: does it always go one way?
+        #Also make variable to remember which group lost P pieces of size Vs1/Ps1, and which group lost (P-1) pieces of that size.
+        newMajors, newMajorsLostPieces = None, None
+        newMinors, newMinorsLostPieces = None, None
+        if group1[1] / group1[2] < group2[1] / group2[2]:
+            newMajors, newMinors = group1, group2
+            newMajorsLostPieces, newMinorsLostPieces = P-1, P
+        else:
+            newMajors, newMinors = group2, group1
+            newMajorsLostPieces, newMinorsLostPieces = P, P-1
+
+        #Assumption: In this sub-problem, the smallest piece will be no smaller than Vs1/Ps1, so we have already found smallest piece size
+        (subMuffinPieces, subMajorPieces, subMinorPieces) = scott(minors, newMajors, newMinors)#run the subproblem, next we need to reconstruct solution
+
+        muffinPiecesFromMajors = [major + ([Vs1/Ps1]*newMajorsLostPieces) for major in subMajorPieces]
+        muffinPiecesFromMinors = [minor + ([Vs1/Ps1]*newMinorsLostPieces) for minor in subMinorPieces]
+
+        majorPieces = [[Vs1/Ps1]*Ps1 for i in range(Ns1)] #majors pieces are just all Vs1/Ps1
+
+        return (muffinPiecesFromMajors + muffinPiecesFromMinors, majorPieces, subMuffinPieces)#minors became muffins for subproblem
+
+        #return Vs1 / Ps1
+    if Ns2 == 0: #If this happens, then Assumption: muffins and majors must be identical
+        if muffins != majors:
+            raise Exception("Assumption wrong: if no minors, then muffins and majors identical")
+        muffin = [Vs1 / Ps1 for i in range(Pm)]
+        muffinPieces = [muffin for i in range(Nm)]
+        majorPieces = muffinPieces #we are working under assumption that muffins and majors are identical
+        #return Vs1 / Ps1
+        return (muffinPieces, majorPieces, []) #no minors, so just an empty list in the last slot
 
     # this is the value of L which keeps Nm/Ns2 as close as possible to (Ps2*L - L + 1) / L.
     #That makes sense because it allows the average piece size in the chains to be as large as possible (TODO: check that that statement makes sense)
@@ -72,7 +109,10 @@ def scott(muffins, majors, minors):
 
     print("L = %s, a = %s, b = %s" %(L,a,b))
 
-    return scott(majors, newMajors, newMinors)
+    #return scott(majors, newMajors, newMinors)
+    subProblem = scott(majors, newMajors, newMinors)
+
+    #TODO: use results from subproblem to construct final result.
 
 
 def f(m,s):
@@ -82,6 +122,44 @@ def f(m,s):
     sV, sVm1 = interval.getShares(m,s,V)
     #sV are majors, sVm1 are minors
     return scott((m,1,2),(sV,m/s,V),(sVm1,m/s,V-1))
+
+#The following functions are used to deconstruct L-chains back into muffins and minors.
+def deconstruct1chain(pieces, Pm, Ps2, Vm):
+    """Input is list of pieces, output is [muffins, studentes] which are both lists of lists of pieces"""
+    muffinsMissingLastPiece = divide_chunks(pieces, Pm-1)#first find list of most of muffins, missing last piece (connected to student)
+    muffins = [partialM + [Vm - sum(partialM)] for partialM in muffinsMissingLastPiece]#find what the size of the last piece is
+    student = [muffin[-1] for muffin in muffins]
+    return (muffins, [student])
+
+def deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L):
+    """Input is list of pieces, output [muffins, students] which are both lists of lists of pieces."""
+    if L == 1:
+        return deconstruct1chain(pieces, Pm, Ps2, Vm)
+    else: #We compute the left-most student (and his muffins) and then recurse
+        #first, find the Ps2-1 muffins on the left-most student. Refer to these as left-muffins
+        numLeftPieces = (Ps2-1)*(Pm-1)
+        leftPieces = pieces[:numLeftPieces] #find pieces for left-muffins
+        bridgePieces = pieces[numLeftPieces:numLeftPieces + Pm - 2] #Pieces that go to muffin connecting left student to next student
+        leftOverPieces = pieces[numLeftPieces + Pm - 2:] #all the rest of the pieces
+
+        muffinsMissingLastPiece = divide_chunks(leftPieces, Pm-1)#first find list of most of muffins, missing last piece (connected to student)
+        muffins = [partialM + [Vm - sum(partialM)] for partialM in muffinsMissingLastPiece]#find what the size of the last piece is
+        studentMissingLastPiece = [muffin[-1] for muffin in muffins]
+        student = studentMissingLastPiece + [Vs2 - sum(studentMissingLastPiece)]
+        newPieces = [student[-1]] + bridgePieces + leftOverPieces #add that last piece of the student on to the pieces to be used in recursion - this is bridge muffin piece
+
+        (restOfMuffins, restOfStudents) = deconstructLchain(newPieces, Pm, Ps2, Vm, Vs2, L-1) #calculate the answer for smaller chain
+
+        return (muffins + restOfMuffins, [student] + restOfStudents)
+
+
+
+
+        
+
+def divide_chunks(l, n): #divide a list into equal sized pieces
+    for i in range(0, len(l), n):  
+        yield l[i:i + n] 
 
 def pfmap(fractions):
     return str(tuple(map(pf, fractions)))
