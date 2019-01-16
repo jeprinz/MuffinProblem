@@ -1,4 +1,4 @@
-#implementation of Scott Huddleton's algorithm for the muffin problem
+#implementation of Scott Huddleston's algorithm for the muffin problem
 
 from fractions import Fraction
 import math
@@ -13,7 +13,7 @@ def scott(muffins, majors, minors):
     that Vs1/Ps1 <= Vs2/Ps2.
     Find way of doing this so smallest piece is as large as possible.
 
-    The following algorithm is (my best guess at figuring out) an algorithm created by Scott Huddleton from California.
+    The following algorithm is (my best guess at figuring out) an algorithm created by Scott Huddleston from California.
     As far as we can tell, no one knows why it works. Furthermore, and again no one knows why, but the results of the
     algorithm are also optimal results for the traditional muffin problem.
     
