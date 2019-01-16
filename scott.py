@@ -21,7 +21,17 @@ def scott(muffins, majors, minors):
     which tells how to split the muffins, majors, and minors.
     For example, muffinPieces is a list of lists, where each inner list represents a muffin"""
 
+
     (Nm, Vm, Pm), (Ns1, Vs1, Ps1), (Ns2, Vs2, Ps2) = muffins, majors, minors
+
+    #Erik says majors have fewer total shares
+    swap = False
+    if Ns1*Ps1 > Ns2*Ps2:
+        majors,minors = minors,majors
+        swap = True
+
+    (Nm, Vm, Pm), (Ns1, Vs1, Ps1), (Ns2, Vs2, Ps2) = muffins, majors, minors
+    muffinPieces, majorPieces, minorPieces = None, None, None
 
     #Assumption: In optimal solution to the scott muffin problem, each muffin gives either exactly one piece to a minor
     #and the rest to majors (major type muffins), or exactly one piece to one minor, one piece to another minor, and the
@@ -39,15 +49,20 @@ def scott(muffins, majors, minors):
 
     if Ns2 == 0: #must always be that Nm*Vm = Ns1*Vs1, and Nm*Pm = Ns1*Ps1, so Vm/Pm = Vs1/Ps1
         #just divide all muffins and student evenly
+        print("case 1")
         muffinPieces = [[Vm/Pm]*int(Pm)]*int(Nm)
         majorPieces = [[Vs1/Ps1]*int(Ps1)]*int(Ns1)
-        return (muffinPieces, majorPieces, []) #no minors, so just an empty list in the last slot
+        minorPieces = []
+        #return (muffinPieces, majorPieces, []) #no minors, so just an empty list in the last slot
     elif Ns1 == 0: #must always be that Nm*Vm = Ns2*Vs2, and Nm*Pm = Ns2*Ps2, so Vm/Pm = Vs2/Ps2
         #just divide all muffins and student evenly
+        print("case 2")
         muffinPieces = [[Vm/Pm]*int(Pm)]*int(Nm)
         minorPieces = [[Vs2/Ps2]*int(Ps2)]*int(Ns2)
-        return (muffinPieces, [], minorPieces) #no majors, so just an empty list in the middle slot
+        majorPieces = []
+        #return (muffinPieces, [], minorPieces) #no majors, so just an empty list in the middle slot
     elif Ns2 * Ps2 >= Nm + Ns2: #If this condition holds, then we can't divide minor students into chains (see below)
+        print("case 3")
         #Assumption: under the above condition, the optimal solution involves making all major's pieces Vs1 / Ps1,
         #and furthermore the optimal solution has these pieces distributed as evenly as possible in the muffins.
         majorPieces = [[Vs1 / Ps1 for i in range(int(Ps1))] for j in range(int(Ns1))] #All major pieces of size Vs1 / Ps1
@@ -81,47 +96,62 @@ def scott(muffins, majors, minors):
 
         majorPieces = [[Vs1/Ps1]*int(Ps1) for i in range(int(Ns1))] #majors pieces are just all Vs1/Ps1
 
-        return (muffinPiecesFromMajors + muffinPiecesFromMinors, majorPieces, subMuffinPieces)#minors became muffins for subproblem
+        muffinPieces = muffinPiecesFromMajors + muffinPiecesFromMinors
+        minorPieces = subMuffinPieces
+        #return (muffinPiecesFromMajors + muffinPiecesFromMinors, majorPieces, subMuffinPieces)#minors became muffins for subproblem
+    else:
 
-        #return Vs1 / Ps1
+            #return Vs1 / Ps1
 
-    # this is the value of L which keeps Nm/Ns2 as close as possible to (Ps2*L - L + 1) / L.
-    #That makes sense because it allows the average piece size in the chains to be as large as possible (TODO: check that that statement makes sense)
-    L = Fraction(math.ceil(1/(Nm/Ns2 + 1 - Ps2)))
+        # this is the value of L which keeps Nm/Ns2 as close as possible to (Ps2*L - L + 1) / L.
+        #That makes sense because it allows the average piece size in the chains to be as large as possible (TODO: check that that statement makes sense)
+        L = Fraction(math.ceil(1/(Nm/Ns2 + 1 - Ps2)))
 
-    #Given the above assumptions and value of L, we can calculate the number of L-length chains there are, b,
-    #and the number of (L-1)-length chains, a. We can get two equations by looking at
-    # the total number of minors and muffins involved in each chain. The use linear algegra to get below equations.
-    a = L*Nm - L*Ps2*Ns2 + L*Ns2 - Ns2
-    if L == 1:
-        a = 0#the formula does not work in this special case. TODO: consider why
-    b = (Ns2 - a*(L - 1)) / L
+        #Given the above assumptions and value of L, we can calculate the number of L-length chains there are, b,
+        #and the number of (L-1)-length chains, a. We can get two equations by looking at
+        # the total number of minors and muffins involved in each chain. The use linear algegra to get below equations.
+        a = L*Nm - L*Ps2*Ns2 + L*Ns2 - Ns2
+        #---------------------
+        #if L == 1:
+        #    a = 0#the formula does not work in this special case. TODO: consider why
+        b = (Ns2 - a*(L - 1)) / L
 
-    #But how do we actually make things work out with major type muffins, minor type muffins, and whatnot? Recursion!
+        #But how do we actually make things work out with major type muffins, minor type muffins, and whatnot? Recursion!
 
-    #Assumption: In an optimal solution, the smallest piece going to a minor will be larger than the smallest piece going to a major,
-    #So we can freely permute the way that majors are connected to a chain. The only thing that matters is which majors are
-    #Connected to which chains. Therefore, 
-    #We consider a new "scott muffin problem" with the old majors as new muffins, and the (L-1)-chains and L-chain as the
-    #majors and minors. The old majors "give pieces to" the old minors.
+        #Assumption: In an optimal solution, the smallest piece going to a minor will be larger than the smallest piece going to a major,
+        #So we can freely permute the way that majors are connected to a chain. The only thing that matters is which majors are
+        #Connected to which chains. Therefore, 
+        #We consider a new "scott muffin problem" with the old majors as new muffins, and the (L-1)-chains and L-chain as the
+        #majors and minors. The old majors "give pieces to" the old minors.
 
-    #The L-chains will be majors unless possibly p = 2 and Vm > Vs2. I may have made a miscalculation, though, because
-    #In practice that seems to be wrong and it seems like the L-chains are just always the majors.
+        #The L-chains will be majors unless possibly p = 2 and Vm > Vs2. I may have made a miscalculation, though, because
+        #In practice that seems to be wrong and it seems like the L-chains are just always the majors.
 
-    #The following are the correct values of N, V, P for the L-chains and (L-1)-chains
-    newPs1 = (L*Ps2 - 2*(L-1))*(Pm-1) + (L - 1) * (Pm - 2)
-    newPs2 = ((L-1)*Ps2 - 2*(L-2))*(Pm-1) + (L - 2) * (Pm - 2)
-    newMajors = (b, (L*Ps2 - (L-1))*Vm - L*Vs2, newPs1)
-    newMinors = (a, ((L-1)*Ps2 - (L-2))*Vm - (L-1)*Vs2, newPs2)
+        #The following are the correct values of N, V, P for the L-chains and (L-1)-chains
+        newPs1 = (L*Ps2 - 2*(L-1))*(Pm-1) + (L - 1) * (Pm - 2)
+        newPs2 = ((L-1)*Ps2 - 2*(L-2))*(Pm-1) + (L - 2) * (Pm - 2)
+        newMajors = (b, (L*Ps2 - (L-1))*Vm - L*Vs2, newPs1)
+        newMinors = (a, ((L-1)*Ps2 - (L-2))*Vm - (L-1)*Vs2, newPs2)
 
-    #return scott(majors, newMajors, newMinors)
-    (subMuffinPieces, subMajorPieces, subMinorPieces) = scott(majors, newMajors, newMinors)
-    deconstructedLChains = [deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L) for pieces in subMajorPieces] #L-chains became the sub-majors
-    deconstructedLm1Chains = [deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L-1) for pieces in subMinorPieces] #(L-1)-chains became the sub-minors
-    muffinPieces = sum([dchain[0] for dchain in deconstructedLChains + deconstructedLm1Chains], []) #get first elements out of tuples, so we have lists of students
-    studentPieces = sum([dchain[1] for dchain in deconstructedLChains + deconstructedLm1Chains], [])
+        print("case 4 recursing:")
+        print("%s chain of length %s, %s chains of %s" % (str(b), str(L), str(a), str(L-1)))
+        print("subproblem: ((%s),(%s),(%s))"%(pfmap(majors), pfmap(newMajors), pfmap(newMinors)))
 
-    return (muffinPieces, subMuffinPieces, studentPieces) #submuffins are majors, substudents are minors+muffins which were deconstructed
+        (subMuffinPieces, subMajorPieces, subMinorPieces) = scott(majors, newMajors, newMinors)
+        deconstructedLChains = [deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L) for pieces in subMajorPieces] #L-chains became the sub-majors
+        deconstructedLm1Chains = [deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L-1) for pieces in subMinorPieces] #(L-1)-chains became the sub-minors
+        muffinPieces = sum([dchain[0] for dchain in deconstructedLChains + deconstructedLm1Chains], []) #get first elements out of tuples, so we have lists of students
+        studentPieces = sum([dchain[1] for dchain in deconstructedLChains + deconstructedLm1Chains], [])
+
+        #return (muffinPieces, subMuffinPieces, studentPieces) #submuffins are majors, substudents are minors+muffins which were deconstructed
+        majorPieces = subMuffinPieces
+        minorPieces = studentPieces
+
+    if not swap:
+        return muffinPieces, majorPieces, minorPieces
+    else:
+        return muffinPieces, minorPieces, majorPieces
+
 
 
 def f(m,s): #put it all together and calculate f(m,s)
