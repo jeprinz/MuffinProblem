@@ -37,7 +37,17 @@ def scott(muffins, majors, minors):
     #Assumption: If we can't make chains like that, then we have already found the constraint on the muffin problem.
     #Below, we check if its possible to make chains. The following equation does so:
 
-    if Ns2 * Ps2 >= Nm + Ns2: #If this condition holds, then we can't divide minor students into chains (see below)
+    if Ns2 == 0: #must always be that Nm*Vm = Ns1*Vs1, and Nm*Pm = Ns1*Ps1, so Vm/Pm = Vs1/Ps1
+        #just divide all muffins and student evenly
+        muffinPieces = [[Vm/Pm]*int(Pm)]*int(Nm)
+        majorPieces = [[Vs1/Ps1]*int(Ps1)]*int(Ns1)
+        return (muffinPieces, majorPieces, []) #no minors, so just an empty list in the last slot
+    elif Ns1 == 0: #must always be that Nm*Vm = Ns2*Vs2, and Nm*Pm = Ns2*Ps2, so Vm/Pm = Vs2/Ps2
+        #just divide all muffins and student evenly
+        muffinPieces = [[Vm/Pm]*int(Pm)]*int(Nm)
+        minorPieces = [[Vs2/Ps2]*int(Ps2)]*int(Ns2)
+        return (muffinPieces, [], minorPieces) #no majors, so just an empty list in the middle slot
+    elif Ns2 * Ps2 >= Nm + Ns2: #If this condition holds, then we can't divide minor students into chains (see below)
         #Assumption: under the above condition, the optimal solution involves making all major's pieces Vs1 / Ps1,
         #and furthermore the optimal solution has these pieces distributed as evenly as possible in the muffins.
         majorPieces = [[Vs1 / Ps1 for i in range(int(Ps1))] for j in range(int(Ns1))] #All major pieces of size Vs1 / Ps1
@@ -74,11 +84,6 @@ def scott(muffins, majors, minors):
         return (muffinPiecesFromMajors + muffinPiecesFromMinors, majorPieces, subMuffinPieces)#minors became muffins for subproblem
 
         #return Vs1 / Ps1
-    elif Ns2 == 0: #must always be that Nm*Vm = Ns1*Vs1, and Nm*Pm = Ns1*Ps1, so Vm/Pm = Vs1/Ps1
-        #just divide all muffins and student evenly
-        muffinPieces = [[Vm/Pm]*int(Pm)]*int(Nm)
-        majorPieces = [[Vs1/Ps1]*int(Ps1)]*int(Ns1)
-        return (muffinPieces, majorPieces, []) #no minors, so just an empty list in the last slot
 
     # this is the value of L which keeps Nm/Ns2 as close as possible to (Ps2*L - L + 1) / L.
     #That makes sense because it allows the average piece size in the chains to be as large as possible (TODO: check that that statement makes sense)
@@ -120,12 +125,20 @@ def scott(muffins, majors, minors):
 
 
 def f(m,s): #put it all together and calculate f(m,s)
+    if m <= s:
+        print("scott's algorithm only works for m>s")
+        return
+
     m = Fraction(m)
     s = Fraction(s)
     V = interval.findV(m,s)
     sV, sVm1 = interval.getShares(m,s,V)
     #sV are majors, sVm1 are minors
     muffins, majors, minors = scott((m,Fraction(1),Fraction(2)),(sV,m/s,V),(sVm1,m/s,V-1))
+
+    if muffins[0][0] < Fraction(1,3):
+        print("scott's algorithm only works if f(m,s) > 1/3")
+        return
     
     for muffin in muffins:
         print("Muffin: " + pfmap(muffin))
