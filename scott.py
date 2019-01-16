@@ -49,20 +49,15 @@ def scott(muffins, majors, minors):
 
     if Ns2 == 0: #must always be that Nm*Vm = Ns1*Vs1, and Nm*Pm = Ns1*Ps1, so Vm/Pm = Vs1/Ps1
         #just divide all muffins and student evenly
-        print("case 1")
         muffinPieces = [[Vm/Pm]*int(Pm)]*int(Nm)
         majorPieces = [[Vs1/Ps1]*int(Ps1)]*int(Ns1)
         minorPieces = []
-        #return (muffinPieces, majorPieces, []) #no minors, so just an empty list in the last slot
     elif Ns1 == 0: #must always be that Nm*Vm = Ns2*Vs2, and Nm*Pm = Ns2*Ps2, so Vm/Pm = Vs2/Ps2
         #just divide all muffins and student evenly
-        print("case 2")
         muffinPieces = [[Vm/Pm]*int(Pm)]*int(Nm)
         minorPieces = [[Vs2/Ps2]*int(Ps2)]*int(Ns2)
         majorPieces = []
-        #return (muffinPieces, [], minorPieces) #no majors, so just an empty list in the middle slot
     elif Ns2 * Ps2 >= Nm + Ns2: #If this condition holds, then we can't divide minor students into chains (see below)
-        print("case 3")
         #Assumption: under the above condition, the optimal solution involves making all major's pieces Vs1 / Ps1,
         #and furthermore the optimal solution has these pieces distributed as evenly as possible in the muffins.
         majorPieces = [[Vs1 / Ps1 for i in range(int(Ps1))] for j in range(int(Ns1))] #All major pieces of size Vs1 / Ps1
@@ -74,31 +69,20 @@ def scott(muffins, majors, minors):
         a = Ns1*Ps1 - (P - 1)*Nm
         b = Nm - a
         #After working out the math, that means that the two groups of muffins we get are as follows:
-        group1 = (a, Vm - P*Vs1/Ps1, Pm - P)
-        group2 = (b, Vm - (P-1)*Vs1/Ps1, Pm - (P-1))
-        #Next, check Vs/Ps to determine which group is majors and which group is minors. TODO: does it always go one way?
-        #Also make variable to remember which group lost P pieces of size Vs1/Ps1, and which group lost (P-1) pieces of that size.
-        newMajors, newMajorsLostPieces = None, None
-        newMinors, newMinorsLostPieces = None, None
-        if group1[1] / group1[2] > group2[1] / group2[2]:
-            newMajors, newMinors = group1, group2
-            newMajorsLostPieces, newMinorsLostPieces = int(P), int(P-1)
-        else:
-            newMajors, newMinors = group2, group1
-            newMajorsLostPieces, newMinorsLostPieces = int(P-1), int(P)
+        newMajors = (a, Vm - P*Vs1/Ps1, Pm - P)
+        newMinors = (b, Vm - (P-1)*Vs1/Ps1, Pm - (P-1))
 
         #Assumption: In this sub-problem, the smallest piece will be no smaller than Vs1/Ps1, so we have already found smallest piece size
         (subMuffinPieces, subMajorPieces, subMinorPieces) = scott(minors, newMajors, newMinors)#run the subproblem, next we need to reconstruct solution
 
 
-        muffinPiecesFromMajors = [major + ([Vs1/Ps1]*newMajorsLostPieces) for major in subMajorPieces]
-        muffinPiecesFromMinors = [minor + ([Vs1/Ps1]*newMinorsLostPieces) for minor in subMinorPieces]
+        muffinPiecesFromMajors = [major + ([Vs1/Ps1]*int(P)) for major in subMajorPieces]
+        muffinPiecesFromMinors = [minor + ([Vs1/Ps1]*int(P - 1)) for minor in subMinorPieces]
 
         majorPieces = [[Vs1/Ps1]*int(Ps1) for i in range(int(Ns1))] #majors pieces are just all Vs1/Ps1
 
         muffinPieces = muffinPiecesFromMajors + muffinPiecesFromMinors
         minorPieces = subMuffinPieces
-        #return (muffinPiecesFromMajors + muffinPiecesFromMinors, majorPieces, subMuffinPieces)#minors became muffins for subproblem
     else:
 
             #return Vs1 / Ps1
@@ -133,17 +117,12 @@ def scott(muffins, majors, minors):
         newMajors = (b, (L*Ps2 - (L-1))*Vm - L*Vs2, newPs1)
         newMinors = (a, ((L-1)*Ps2 - (L-2))*Vm - (L-1)*Vs2, newPs2)
 
-        print("case 4 recursing:")
-        print("%s chain of length %s, %s chains of %s" % (str(b), str(L), str(a), str(L-1)))
-        print("subproblem: ((%s),(%s),(%s))"%(pfmap(majors), pfmap(newMajors), pfmap(newMinors)))
-
         (subMuffinPieces, subMajorPieces, subMinorPieces) = scott(majors, newMajors, newMinors)
         deconstructedLChains = [deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L) for pieces in subMajorPieces] #L-chains became the sub-majors
         deconstructedLm1Chains = [deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L-1) for pieces in subMinorPieces] #(L-1)-chains became the sub-minors
         muffinPieces = sum([dchain[0] for dchain in deconstructedLChains + deconstructedLm1Chains], []) #get first elements out of tuples, so we have lists of students
         studentPieces = sum([dchain[1] for dchain in deconstructedLChains + deconstructedLm1Chains], [])
 
-        #return (muffinPieces, subMuffinPieces, studentPieces) #submuffins are majors, substudents are minors+muffins which were deconstructed
         majorPieces = subMuffinPieces
         minorPieces = studentPieces
 
