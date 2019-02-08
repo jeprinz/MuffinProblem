@@ -26,12 +26,15 @@ def scott(muffins, majors, minors):
 
     #Erik says majors have fewer total shares
     swap = False
-    if Ns1*Ps1 > Ns2*Ps2:
+    #if Ns1*Ps1 > Ns2*Ps2:
+    if Vs1/Ps1 > Vs2/Ps2:
         majors,minors = minors,majors
         swap = True
 
     (Nm, Vm, Pm), (Ns1, Vs1, Ps1), (Ns2, Vs2, Ps2) = muffins, majors, minors
     muffinPieces, majorPieces, minorPieces = None, None, None
+
+    #print("scott((%s),(%s),(%s))"%(pfmap(muffins), pfmap(majors), pfmap(minors)))
 
     #Assumption: In optimal solution to the scott muffin problem, each muffin gives either exactly one piece to a minor
     #and the rest to majors (major type muffins), or exactly one piece to one minor, one piece to another minor, and the
@@ -84,9 +87,6 @@ def scott(muffins, majors, minors):
         muffinPieces = muffinPiecesFromMajors + muffinPiecesFromMinors
         minorPieces = subMuffinPieces
     else:
-
-            #return Vs1 / Ps1
-
         # this is the value of L which keeps Nm/Ns2 as close as possible to (Ps2*L - L + 1) / L.
         #That makes sense because it allows the average piece size in the chains to be as large as possible (TODO: check that that statement makes sense)
         L = Fraction(math.ceil(1/(Nm/Ns2 + 1 - Ps2)))
@@ -133,7 +133,7 @@ def scott(muffins, majors, minors):
 
 
 
-def f(m,s): #put it all together and calculate f(m,s)
+def f(m,s, justValue=False): #put it all together and calculate f(m,s)
     if m <= s:
         print("scott's algorithm only works for m>s")
         return
@@ -144,6 +144,9 @@ def f(m,s): #put it all together and calculate f(m,s)
     sV, sVm1 = interval.getShares(m,s,V)
     #sV are majors, sVm1 are minors
     muffins, majors, minors = scott((m,Fraction(1),Fraction(2)),(sV,m/s,V),(sVm1,m/s,V-1))
+
+    if justValue:
+        return min([piece for muffin in muffins for piece in muffin])
 
     if muffins[0][0] < Fraction(1,3):
         print("scott's algorithm only works if f(m,s) > 1/3")
@@ -165,12 +168,12 @@ def deconstruct1chain(pieces, Pm, Ps2, Vm):
 
 def deconstructLchain(pieces, Pm, Ps2, Vm, Vs2, L):
     """Input is list of pieces, output [muffins, students] which are both lists of lists of pieces."""
-    if L <= 0:
-        raise Exception("L should be at least 1, instead its " + str(L))
     Pm = int(Pm) #we need to make sure these are integers and not Fraction objects
     Ps2 = int(Ps2)
-    if L == 1:
-        return deconstruct1chain(pieces, Pm, Ps2, Vm)
+    if L == 0:
+        return ([pieces], [])
+    #if L == 1:
+    #    return deconstruct1chain(pieces, Pm, Ps2, Vm)
     else: #We compute the left-most student (and his muffins) and then recurse
         #first, find the Ps2-1 muffins on the left-most student. Refer to these as left-muffins
         numLeftPieces = (Ps2-1)*(Pm-1)
