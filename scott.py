@@ -131,9 +131,17 @@ def scott(muffins, majors, minors):
     else:
         return muffinPieces, minorPieces, majorPieces
 
+def checkProcedure(muffins, students, m, s):
+    piecesSame = sorted([p for m in muffins for p in m]) == sorted([p for s in students for p in s])
+    for muffin in muffins:
+        if sum(muffin) != 1:
+            return False
+    for student in students:
+        if sum(student) != Fraction(m,s):
+            return False
+    return piecesSame and len(muffins) == m and len(students) == s
 
-
-def f(m,s, justValue=False): #put it all together and calculate f(m,s)
+def f(m,s, justValue=False, returnProcedure=False, checkCorrect=False): #put it all together and calculate f(m,s)
     if m <= s:
         print("scott's algorithm only works for m>s")
         return
@@ -145,8 +153,17 @@ def f(m,s, justValue=False): #put it all together and calculate f(m,s)
     #sV are majors, sVm1 are minors
     muffins, majors, minors = scott((m,Fraction(1),Fraction(2)),(sV,m/s,V),(sVm1,m/s,V-1))
 
+    if checkCorrect:
+        if checkProcedure(muffins, majors + minors, m, s):
+            print("procedure is correct")
+        else:
+            print("procedure is not valid!!")
+
     if justValue:
         return min([piece for muffin in muffins for piece in muffin])
+
+    if returnProcedure:
+        return (muffins, majors, minors)
 
     if muffins[0][0] < Fraction(1,3):
         print("scott's algorithm only works if f(m,s) > 1/3")
