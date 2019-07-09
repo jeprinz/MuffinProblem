@@ -160,14 +160,13 @@ def f(m,s, justValue=False, returnProcedure=False, checkCorrect=False): #put it 
             print("procedure is not valid!!")
 
     if justValue:
-        return min([piece for muffin in muffins for piece in muffin])
+        return max(min([piece for muffin in muffins for piece in muffin]), Fraction(1,3))
 
     if returnProcedure:
+        if muffins[0][0] < Fraction(1,3):
+            print("scott's algorithm only works if f(m,s) > 1/3")
         return (muffins, majors, minors)
 
-    if muffins[0][0] < Fraction(1,3):
-        print("scott's algorithm only works if f(m,s) > 1/3")
-        return
     
     for muffin in muffins:
         print("Muffin: " + pfmap(muffin))
