@@ -34,13 +34,12 @@ def scott(muffins, majors, minors):
     (Nm, Vm, Pm), (Ns1, Vs1, Ps1), (Ns2, Vs2, Ps2) = muffins, majors, minors
     muffinPieces, majorPieces, minorPieces = None, None, None
 
-    #print("scott((%s),(%s),(%s))"%(pfmap(muffins), pfmap(majors), pfmap(minors)))
+    print("scott((%s),(%s),(%s))"%(pfmap(muffins), pfmap(majors), pfmap(minors)))
 
     #Assumption: In optimal solution to the scott muffin problem, each muffin gives either exactly one piece to a minor
     #and the rest to majors (major type muffins), or exactly one piece to one minor, one piece to another minor, and the
     #rest to majors (minor type muffins).
-
-    #There are (Ns2*Vs2 - Nm) minor type muffins, and (2*Nm - Ns2*Vs2) major type muffins.
+#There are (Ns2*Vs2 - Nm) minor type muffins, and (2*Nm - Ns2*Vs2) major type muffins.
     #We may make a graph with Ns2 nodes and (Ns2*Vs2 - Nm) edges. We call this the minor students graph.
     #It determines the arrangement of minor type muffins being given to the minor students
 
@@ -99,6 +98,7 @@ def scott(muffins, majors, minors):
         #if L == 1:
         #    a = 0#the formula does not work in this special case. TODO: consider why
         b = (Ns2 - a*(L - 1)) / L
+        print("making %s chains of length %s and %s chains of length %s. Also, muffins split into %s pieces " % tuple(map(str,[a, L-1, b, L, Pm])))
 
         #But how do we actually make things work out with major type muffins, minor type muffins, and whatnot? Recursion!
 
